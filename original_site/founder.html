@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMID — Founder</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .founder-hero { display: flex; align-items: center; gap: 3rem; max-width: 1000px; margin: 0 auto; padding: 2rem 0; flex-wrap: wrap; }
+        .founder-avatar { width: 180px; height: 180px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 4rem; flex-shrink: 0; box-shadow: 0 10px 40px rgba(99, 102, 241, 0.3); overflow: hidden; border: 4px solid rgba(99, 102, 241, 0.3); }
+        .founder-info { flex: 1; min-width: 280px; }
+        .founder-info h2 { font-family: 'Orbitron', monospace; font-size: 2rem; margin-bottom: 0.5rem; }
+        .founder-info .role { color: var(--primary-glow); font-weight: 600; margin-bottom: 1rem; }
+        .founder-info p { color: var(--text-muted); line-height: 1.7; margin-bottom: 1rem; }
+        .founder-social { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+        .founder-social a { padding: 0.6rem 1.2rem; border-radius: 12px; background: var(--darker); border: 1px solid rgba(99, 102, 241, 0.2); color: var(--text); text-decoration: none; font-size: 0.85rem; transition: all 0.3s; display: flex; align-items: center; gap: 0.4rem; }
+        .founder-social a:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.1); }
+        .mission-section { max-width: 1000px; margin: 3rem auto; }
+        .mission-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+        .mission-card { background: var(--card); border-radius: 20px; padding: 2rem; border: 1px solid rgba(99, 102, 241, 0.1); transition: all 0.3s; }
+        .mission-card:hover { border-color: var(--primary); transform: translateY(-5px); }
+        .mission-card .icon { font-size: 2rem; margin-bottom: 1rem; }
+        .mission-card h3 { font-family: 'Orbitron', monospace; font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .mission-card p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; }
+        .timeline { max-width: 800px; margin: 3rem auto; position: relative; }
+        .timeline::before { content: ''; position: absolute; left: 20px; top: 0; bottom: 0; width: 2px; background: linear-gradient(180deg, var(--primary), var(--secondary)); }
+        .timeline-item { position: relative; padding-left: 60px; margin-bottom: 2rem; }
+        .timeline-dot { position: absolute; left: 10px; top: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--card); border: 3px solid var(--primary); }
+        .timeline-content { background: var(--card); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(99, 102, 241, 0.1); }
+        .timeline-content h4 { font-family: 'Orbitron', monospace; font-size: 1rem; margin-bottom: 0.3rem; }
+        .timeline-content span { color: var(--primary-glow); font-size: 0.8rem; }
+        .timeline-content p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem; }
+    </style>
+</head>
+<body data-theme="dark">
+    <canvas id="particle-canvas"></canvas>
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">SMID</a>
+        <div class="nav-links">
+            <a href="index.html" data-i18n="nav_home">Home</a>
+            <a href="prototype.html" data-i18n="nav_categories">Categories</a>
+            <a href="register.html" data-i18n="nav_register">Register</a>
+            <a href="dashboard.html" data-i18n="nav_dashboard">Dashboard</a>
+            <a href="idcard.html" data-i18n="nav_idcard">ID Card</a>
+            <a href="cloud.html" data-i18n="nav_cloud">Cloud</a>
+            <a href="founder.html" class="active" data-i18n="nav_founder">Founder</a>
+        </div>
+        <div class="nav-controls">
+            <div class="lang-switcher">
+                <button class="lang-btn" onclick="toggleLangDropdown()">
+                    <span>🌐</span><span id="currentLang">English</span><span>▼</span>
+                </button>
+                <div class="lang-dropdown" id="langDropdown">
+                    <div class="lang-option" data-lang="en" onclick="selectLang('en')">🇺🇸 English</div>
+                    <div class="lang-option" data-lang="fr" onclick="selectLang('fr')">🇫🇷 Français</div>
+                    <div class="lang-option" data-lang="es" onclick="selectLang('es')">🇪🇸 Español</div>
+                    <div class="lang-option" data-lang="pt" onclick="selectLang('pt')">🇧🇷 Português</div>
+                    <div class="lang-option" data-lang="yo" onclick="selectLang('yo')">🇳🇬 Yorùbá</div>
+                    <div class="lang-option" data-lang="ar" onclick="selectLang('ar')">🇸🇦 العربية</div>
+                    <div class="lang-option" data-lang="zh" onclick="selectLang('zh')">🇨🇳 中文</div>
+                </div>
+            </div>
+            <div class="theme-toggle">
+                <button class="theme-btn" onclick="setTheme('dark')">🌙</button>
+                <button class="theme-btn" onclick="setTheme('light')">☀️</button>
+                <button class="theme-btn" onclick="setTheme('neon')">⚡</button>
+            </div>
+            <div id="authNav"></div>
+            <div class="hamburger" onclick="toggleMobileMenu()"><span></span><span></span><span></span></div>
+        </div>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html" data-i18n="nav_home">Home</a>
+        <a href="prototype.html" data-i18n="nav_categories">Categories</a>
+        <a href="register.html" data-i18n="nav_register">Register</a>
+        <a href="dashboard.html" data-i18n="nav_dashboard">Dashboard</a>
+        <a href="idcard.html" data-i18n="nav_idcard">ID Card</a>
+        <a href="cloud.html" data-i18n="nav_cloud">Cloud</a>
+        <a href="founder.html" data-i18n="nav_founder">Founder</a>
+    </div>
+
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Meet the Founder</h2>
+            <p class="section-subtitle">The visionary behind SMID's mission to secure digital identity</p>
+
+            <div class="founder-hero">
+                <div class="founder-avatar"><img src="founder.jpg" alt="Oluwatosin Abraham Willoughby" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
+                <div class="founder-info">
+                    <h2>Oluwatosin Abraham Willoughby</h2>
+                    <div class="role">Founder & CEO — SMID Platform</div>
+                    <p>Oluwatosin Abraham Willoughby is the visionary founder of the SMID (Social Media Identification) Platform, a groundbreaking system designed to provide verified digital identity for individuals and businesses across all social media platforms.</p>
+                    <p>With a deep passion for online safety, digital trust, and identity verification, Oluwatosin created SMID to address the growing challenges of impersonation, fraud, and identity theft in the digital age. The platform offers four tailored verification tiers — TSMID for teens, TASMID for students, ASMID for adults, and BSMID for businesses — each designed to protect users while building trust across social networks.</p>
+                    <p>"Identity Today, Safety Tomorrow" — this founding principle drives every feature of the SMID ecosystem, from biometric face scanning to AI-powered verification assistants.</p>
+                    <div class="founder-social">
+                        <a href="#" onclick="showNotification('Info','LinkedIn profile coming soon','info')">💼 LinkedIn</a>
+                        <a href="#" onclick="showNotification('Info','Twitter profile coming soon','info')">🐦 Twitter</a>
+                        <a href="#" onclick="showNotification('Info','Instagram profile coming soon','info')">📸 Instagram</a>
+                        <a href="mailto:founder@smid.platform" onclick="showNotification('Success','Email client opened','success')">📧 Email</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mission-section">
+                <h2 class="section-title">Our Mission</h2>
+                <div class="mission-grid">
+                    <div class="mission-card">
+                        <div class="icon">🔒</div>
+                        <h3>Secure Identity</h3>
+                        <p>Provide military-grade encryption and biometric verification to ensure every digital identity is protected against fraud and impersonation.</p>
+                    </div>
+                    <div class="mission-card">
+                        <div class="icon">🛡️</div>
+                        <h3>Online Safety</h3>
+                        <p>Create a safer internet by enabling verified interactions across all social platforms, reducing scams and fake accounts.</p>
+                    </div>
+                    <div class="mission-card">
+                        <div class="icon">🌍</div>
+                        <h3>Global Access</h3>
+                        <p>Make verified identity accessible to everyone — teens, students, adults, and businesses — across 150+ countries.</p>
+                    </div>
+                    <div class="mission-card">
+                        <div class="icon">🤝</div>
+                        <h3>Trust Building</h3>
+                        <p>Empower users to build genuine connections and credibility through visible trust scores and verified badges.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline">
+                <h2 class="section-title">Platform Journey</h2>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Concept Born</h4><span>2024</span>
+                        <p>Oluwatosin identified the critical need for verified social media identity after witnessing growing cases of online impersonation and fraud.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>SMID Platform Founded</h4><span>2025</span>
+                        <p>The SMID platform was officially founded with a mission to create a universal digital identity verification system for social media.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Four-Tier System Launched</h4><span>2025</span>
+                        <p>TSMID, TASMID, ASMID, and BSMID categories were introduced to serve teens, students, adults, and businesses respectively.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Global Expansion</h4><span>2026</span>
+                        <p>SMID expanded to support 150+ countries with multi-language support, biometric verification, and AI-powered assistance.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p style="font-family: 'Orbitron', monospace; font-size: 1.5rem; margin-bottom: 1rem; background: linear-gradient(135deg, var(--secondary), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">SMID</p>
+        <p>Identity Today, Safety Tomorrow.</p>
+        <p style="margin-top: 1rem; font-size: 0.85rem;">© 2026 SMID Platform. Founded by Oluwatosin Abraham Willoughby. All rights reserved.</p>
+    </footer>
+
+    <div class="cloud-status" onclick="showCloudInfo()">
+        <div class="cloud-dot"></div>
+        <span data-i18n="cloud_sync">Cloud Sync: Active</span>
+        <span id="savedCount" style="color: var(--text-muted); font-size: 0.75rem;">(0 saved)</span>
+    </div>
+
+    <script src="shared.js"></script>
+</body>
+</html>

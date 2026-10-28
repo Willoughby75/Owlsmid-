@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMID — Secure Identity Registration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1; --primary-glow: #818cf8; --secondary: #ec4899; --accent: #06b6d4;
+            --dark: #0f172a; --darker: #020617; --card: #1e293b; --text: #f8fafc; --text-muted: #94a3b8;
+            --success: #22c55e; --warning: #f59e0b; --danger: #ef4444;
+            --neon-blue: #00f3ff; --neon-pink: #ff00ff; --neon-green: #00ff88; --neon-purple: #b026ff; --neon-orange: #ff9500;
+        }
+        [data-theme="light"] { --dark: #f1f5f9; --darker: #e2e8f0; --card: #ffffff; --text: #0f172a; --text-muted: #64748b; }
+        [data-theme="neon"] { --dark: #050014; --darker: #0a0028; --card: #120038; --text: #e0ccff; --text-muted: #a080d0; --primary: #b026ff; --primary-glow: #d080ff; --secondary: #ff00a0; --accent: #00f3ff; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--darker); color: var(--text); overflow-x: hidden; transition: all 0.3s ease; min-height: 100vh; }
+
+        /* PARTICLES */
+        #particle-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+
+        /* NAV */
+        .navbar { position: fixed; top: 0; width: 100%; padding: 1rem 2rem; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); z-index: 1000; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(99, 102, 241, 0.2); }
+        [data-theme="light"] .navbar { background: rgba(241, 245, 249, 0.9); }
+        .logo { font-family: 'Orbitron', monospace; font-size: 2rem; font-weight: 900; background: linear-gradient(135deg, var(--secondary), var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 8px; animation: logoPulse 3s ease-in-out infinite; text-decoration: none; }
+        @keyframes logoPulse { 0%, 100% { filter: brightness(1) drop-shadow(0 0 5px var(--primary)); } 50% { filter: brightness(1.3) drop-shadow(0 0 20px var(--primary)); } }
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-weight: 500; transition: color 0.3s; cursor: pointer; font-size: 0.9rem; position: relative; }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary-glow); }
+        .nav-links a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: linear-gradient(90deg, var(--primary), var(--secondary)); transition: width 0.3s; }
+        .nav-links a:hover::after, .nav-links a.active::after { width: 100%; }
+        .nav-controls { display: flex; gap: 0.8rem; align-items: center; }
+        .theme-toggle { display: flex; gap: 0.3rem; background: var(--card); padding: 0.3rem; border-radius: 20px; border: 1px solid rgba(99, 102, 241, 0.3); }
+        .theme-btn { width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--text-muted); transition: all 0.3s; font-size: 0.85rem; }
+        .theme-btn.active { background: var(--primary); color: white; animation: btnPulse 0.5s ease; }
+        @keyframes btnPulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; z-index: 1001; }
+        .hamburger span { width: 25px; height: 3px; background: var(--text); border-radius: 3px; transition: all 0.3s; }
+        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(7px, -6px); }
+        .mobile-menu { position: fixed; top: 0; right: -100%; width: 80%; max-width: 300px; height: 100vh; background: var(--card); z-index: 999; padding: 5rem 2rem; transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; gap: 1.5rem; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
+        .mobile-menu.open { right: 0; }
+        .mobile-menu a { color: var(--text); text-decoration: none; font-size: 1.2rem; font-weight: 600; padding: 0.5rem 0; border-bottom: 1px solid rgba(99,102,241,0.1); transition: all 0.3s; }
+        .mobile-menu a:hover { color: var(--primary-glow); padding-left: 1rem; }
+
+        /* NOTIFICATIONS */
+        .notification-container { position: fixed; top: 80px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 1rem; pointer-events: none; }
+        .notification { background: var(--card); border-left: 4px solid var(--primary); padding: 1rem 1.5rem; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transform: translateX(400px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: all; min-width: 300px; max-width: 400px; animation: notifSlide 0.4s ease forwards; }
+        @keyframes notifSlide { to { transform: translateX(0); } }
+        .notification.success { border-left-color: var(--neon-green); }
+        .notification.warning { border-left-color: var(--warning); }
+        .notification.error { border-left-color: var(--danger); }
+        .notification.ai { border-left-color: var(--neon-blue); box-shadow: 0 0 20px rgba(0,243,255,0.2); }
+        .notification-title { font-weight: 700; margin-bottom: 0.3rem; display: flex; align-items: center; gap: 0.5rem; }
+        .notification-text { font-size: 0.9rem; color: var(--text-muted); }
+
+        /* MAIN */
+        .section { position: relative; z-index: 1; min-height: 100vh; padding: 6rem 2rem 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .section-title { font-family: 'Orbitron', monospace; font-size: 2rem; text-align: center; margin-bottom: 1rem; background: linear-gradient(135deg, var(--text), var(--primary-glow)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .section-subtitle { text-align: center; color: var(--text-muted); margin-bottom: 3rem; }
+
+        /* CIRCULAR ORBIT CATEGORY SELECTOR */
+        .cat-orbit-container { position: relative; width: 400px; height: 400px; margin: 2rem auto; }
+        .cat-orbit-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', monospace; font-weight: 900; font-size: 1.5rem; color: white; box-shadow: 0 0 40px rgba(99, 102, 241, 0.5); z-index: 10; animation: centerPulse 3s ease-in-out infinite; }
+        @keyframes centerPulse { 0%, 100% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.5); } 50% { box-shadow: 0 0 60px rgba(99, 102, 241, 0.8); } }
+        .cat-orbit-ring { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 320px; height: 320px; border-radius: 50%; border: 2px dashed rgba(99, 102, 241, 0.3); animation: ringRotate 20s linear infinite; }
+        @keyframes ringRotate { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
+        .cat-orbit-item { position: absolute; width: 80px; height: 80px; border-radius: 50%; background: var(--card); border: 2px solid rgba(99, 102, 241, 0.3); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); font-size: 0.65rem; font-family: 'Orbitron', monospace; font-weight: 700; color: var(--text-muted); z-index: 20; }
+        .cat-orbit-item:hover { transform: scale(1.2); border-color: var(--primary); box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); color: var(--text); }
+        .cat-orbit-item.selected { background: linear-gradient(135deg, var(--primary), var(--secondary)); border-color: var(--primary); color: white; box-shadow: 0 0 30px rgba(99, 102, 241, 0.6); animation: selectedPulse 2s ease-in-out infinite; }
+        @keyframes selectedPulse { 0%, 100% { transform: scale(1.1); } 50% { transform: scale(1.2); } }
+        .cat-orbit-item .cat-icon { font-size: 1.5rem; margin-bottom: 0.2rem; }
+        .cat-orbit-item:nth-child(3) { top: 0; left: 50%; transform: translate(-50%, -50%); }
+        .cat-orbit-item:nth-child(4) { top: 50%; right: 0; transform: translate(50%, -50%); }
+        .cat-orbit-item:nth-child(5) { bottom: 0; left: 50%; transform: translate(-50%, 50%); }
+        .cat-orbit-item:nth-child(6) { top: 50%; left: 0; transform: translate(-50%, -50%); }
+
+        /* WIZARD */
+        .wizard-container { max-width: 700px; margin: 0 auto; background: var(--card); border-radius: 24px; padding: 2.5rem; border: 1px solid rgba(99, 102, 241, 0.2); display: none; }
+        .wizard-container.active { display: block; animation: fadeIn 0.6s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .wizard-steps { display: flex; justify-content: space-between; margin-bottom: 2.5rem; position: relative; }
+        .wizard-steps::before { content: ''; position: absolute; top: 15px; left: 10%; right: 10%; height: 3px; background: rgba(99, 102, 241, 0.2); z-index: 0; }
+        .wiz-step { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; z-index: 1; }
+        .wiz-step-num { width: 36px; height: 36px; border-radius: 50%; background: var(--darker); border: 2px solid rgba(99, 102, 241, 0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; transition: all 0.3s; }
+        .wiz-step.active .wiz-step-num { background: linear-gradient(135deg, var(--primary), var(--secondary)); border-color: var(--primary); color: white; animation: stepPulse 2s ease-in-out infinite; }
+        @keyframes stepPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); } 50% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); } }
+        .wiz-step.done .wiz-step-num { background: var(--neon-green); border-color: var(--neon-green); color: var(--dark); }
+        .wiz-step-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+        .wiz-step.active .wiz-step-label { color: var(--primary-glow); }
+        .wiz-panel { display: none; }
+        .wiz-panel.active { display: block; animation: fadeIn 0.4s ease; }
+
+        /* FORM ELEMENTS */
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text); font-size: 0.9rem; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.9rem 1rem; border-radius: 12px; border: 2px solid rgba(99, 102, 241, 0.2); background: var(--darker); color: var(--text); font-size: 1rem; transition: all 0.3s; font-family: inherit; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+        /* ANIMATED BUTTONS */
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.9rem 1.8rem; border-radius: 50px; border: none; font-weight: 600; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none; font-size: 0.95rem; font-family: inherit; position: relative; overflow: hidden; }
+        .btn::before { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(255,255,255,0.2); transform: translate(-50%, -50%); transition: width 0.6s, height 0.6s; }
+        .btn:active::before { width: 300px; height: 300px; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(99, 102, 241, 0.6); }
+        .btn-primary:active { transform: translateY(0) scale(0.98); }
+        .btn-outline { background: transparent; color: var(--primary-glow); border: 2px solid var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: white; transform: translateY(-2px); }
+        .btn-glow { animation: btnGlow 2s ease-in-out infinite; }
+        @keyframes btnGlow { 0%, 100% { box-shadow: 0 0 5px rgba(99, 102, 241, 0.5); } 50% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.8), 0 0 40px rgba(99, 102, 241, 0.4); } }
+        .btn-shine { position: relative; overflow: hidden; }
+        .btn-shine::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent); transform: rotate(45deg); animation: shine 3s infinite; }
+        @keyframes shine { 0% { left: -100%; } 100% { left: 100%; } }
+        .btn-bounce:hover { animation: bounce 0.5s ease; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .reg-nav { display: flex; justify-content: space-between; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(99,102,241,0.1); }
+
+        /* CIRCULAR FACE SCANNER */
+        .face-scanner-container { display: flex; flex-direction: column; align-items: center; gap: 2rem; margin: 2rem 0; }
+        .face-scanner-ring { width: 200px; height: 200px; border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; background: var(--darker); border: 3px solid rgba(99, 102, 241, 0.3); transition: all 0.3s; }
+        .face-scanner-ring.scanning { border-color: var(--neon-green); box-shadow: 0 0 30px rgba(0, 255, 136, 0.3); }
+        .face-scanner-ring.completed { border-color: var(--neon-green); background: rgba(0, 255, 136, 0.1); }
+        .face-scanner-ring.failed { border-color: var(--danger); box-shadow: 0 0 30px rgba(239, 68, 68, 0.3); }
+        .face-scanner-inner { width: 160px; height: 160px; border-radius: 50%; background: var(--card); display: flex; align-items: center; justify-content: center; font-size: 4rem; position: relative; overflow: hidden; }
+        .face-grid-overlay { position: absolute; inset: 0; border-radius: 50%; display: none; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); pointer-events: none; }
+        .face-grid-cell { border: 1px solid rgba(0, 255, 136, 0.2); transition: background 0.2s; }
+        .face-grid-cell.active { background: rgba(0, 255, 136, 0.3); }
+        .face-scan-line { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--neon-green), transparent); box-shadow: 0 0 10px var(--neon-green); display: none; animation: faceScanMove 2s ease-in-out infinite; }
+        @keyframes faceScanMove { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        .face-scan-progress { position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 120px; height: 4px; background: var(--darker); border-radius: 2px; overflow: hidden; }
+        .face-scan-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--neon-green)); transition: width 0.3s; border-radius: 2px; }
+        .face-scan-status { font-family: 'Orbitron', monospace; font-size: 0.85rem; color: var(--text-muted); text-align: center; }
+        .face-scan-status.scanning { color: var(--neon-green); }
+        .face-scan-status.complete { color: var(--neon-green); }
+        .face-scan-status.failed { color: var(--danger); }
+        .face-data-points { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 1rem; }
+        .face-data-point { background: var(--darker); border-radius: 8px; padding: 0.5rem; text-align: center; font-size: 0.75rem; transition: all 0.3s; }
+        .face-data-point.detected { background: rgba(0, 255, 136, 0.2); color: var(--neon-green); animation: dataPulse 0.5s ease; }
+        @keyframes dataPulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        /* VERIFICATION EFFECTS */
+        .verify-effect-container { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .verify-effect-container.active { display: flex; }
+        .verify-particles { position: absolute; width: 100%; height: 100%; pointer-events: none; }
+        .verify-particle { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--neon-green); animation: particleBurst 1s ease forwards; }
+        @keyframes particleBurst { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
+        .verify-circle { width: 150px; height: 150px; border-radius: 50%; border: 4px solid var(--neon-green); display: flex; align-items: center; justify-content: center; font-size: 3rem; animation: verifyExpand 0.6s ease forwards; }
+        @keyframes verifyExpand { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
+        .verify-text { font-family: 'Orbitron', monospace; font-size: 1.2rem; color: var(--neon-green); margin-top: 1.5rem; animation: verifyFadeIn 0.6s 0.3s ease forwards; opacity: 0; }
+        @keyframes verifyFadeIn { to { opacity: 1; } }
+
+        /* AI CHAT */
+        .ai-chat-container { position: fixed; bottom: 80px; right: 20px; width: 350px; max-height: 500px; background: var(--card); border-radius: 20px; border: 1px solid rgba(99, 102, 241, 0.3); box-shadow: 0 20px 60px rgba(0,0,0,0.5); z-index: 9998; display: none; flex-direction: column; overflow: hidden; transition: all 0.3s; }
+        .ai-chat-container.open { display: flex; }
+        .ai-chat-header { padding: 1rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; gap: 0.8rem; }
+        .ai-avatar { width: 36px; height: 36px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; animation: aiAvatarPulse 2s ease-in-out infinite; }
+        @keyframes aiAvatarPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); } 50% { box-shadow: 0 0 0 10px rgba(255,255,255,0); } }
+        .ai-chat-title { font-family: 'Orbitron', monospace; font-weight: 700; color: white; font-size: 0.9rem; }
+        .ai-chat-body { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.8rem; }
+        .ai-message { max-width: 80%; padding: 0.8rem 1rem; border-radius: 12px; font-size: 0.85rem; line-height: 1.5; animation: messageSlide 0.3s ease; }
+        @keyframes messageSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .ai-message.bot { background: var(--darker); color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .ai-message.user { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .ai-chat-input { padding: 1rem; display: flex; gap: 0.5rem; border-top: 1px solid rgba(99,102,241,0.1); }
+        .ai-chat-input input { flex: 1; padding: 0.6rem 1rem; border-radius: 20px; border: 1px solid rgba(99,102,241,0.3); background: var(--darker); color: var(--text); font-family: inherit; }
+        .ai-chat-input input:focus { outline: none; border-color: var(--primary); }
+        .ai-chat-toggle { position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4); z-index: 9997; transition: all 0.3s; }
+        .ai-chat-toggle:hover { transform: scale(1.1); box-shadow: 0 6px 30px rgba(99, 102, 241, 0.6); }
+        .ai-chat-toggle.active { transform: rotate(45deg); }
+
+        /* PAYMENT */
+        .payment-methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.5rem 0; }
+        .payment-method { background: var(--darker); border-radius: 12px; padding: 1rem; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.3s; }
+        .payment-method:hover { border-color: var(--primary); }
+        .payment-method.selected { border-color: var(--neon-green); background: rgba(0, 255, 136, 0.1); }
+        .payment-method-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .payment-method-name { font-size: 0.8rem; font-weight: 600; }
+
+        /* ACCESS CODE */
+        .access-code-container { background: linear-gradient(135deg, var(--darker), var(--card)); border-radius: 20px; padding: 2rem; text-align: center; border: 2px solid rgba(99, 102, 241, 0.3); margin: 1.5rem 0; position: relative; overflow: hidden; }
+        .access-code-container::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(from 0deg, transparent, rgba(99,102,241,0.1), transparent 30%); animation: hologramSpin 8s linear infinite; }
+        .access-code-display { font-family: 'Orbitron', monospace; font-size: 2rem; font-weight: 900; letter-spacing: 8px; background: linear-gradient(135deg, var(--neon-blue), var(--neon-green), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; position: relative; z-index: 1; animation: codeGlow 2s ease-in-out infinite; }
+        @keyframes codeGlow { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.3); } }
+        .access-code-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; position: relative; z-index: 1; }
+        .access-code-platforms { display: flex; gap: 1rem; justify-content: center; margin-top: 1rem; position: relative; z-index: 1; }
+        .platform-badge { padding: 0.4rem 0.8rem; border-radius: 20px; background: rgba(99, 102, 241, 0.2); font-size: 0.75rem; font-weight: 600; transition: all 0.3s; }
+        .platform-badge:hover { background: var(--primary); color: white; transform: translateY(-2px); }
+        .platform-badge.verified { background: rgba(0, 255, 136, 0.2); color: var(--neon-green); }
+
+        /* MAP ACCESS */
+        .map-access-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+        .map-access-btn { background: var(--darker); border-radius: 12px; padding: 1rem; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.3s; text-decoration: none; color: var(--text); display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+        .map-access-btn:hover { border-color: var(--primary); transform: translateY(-3px); }
+        .map-access-btn .map-icon { font-size: 2rem; }
+        .map-access-btn .map-label { font-size: 0.85rem; font-weight: 600; }
+        .map-access-btn .map-desc { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* EMAIL ACCESS */
+        .email-access-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+        .email-access-btn { background: var(--darker); border-radius: 12px; padding: 1rem; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.3s; text-decoration: none; color: var(--text); display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+        .email-access-btn:hover { border-color: var(--primary); transform: translateY(-3px); }
+        .email-access-btn .email-icon { font-size: 2rem; }
+        .email-access-btn .email-label { font-size: 0.85rem; font-weight: 600; }
+
+        /* TERMS */
+        .terms-box { background: var(--darker); border-radius: 12px; padding: 1rem; max-height: 150px; overflow-y: auto; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; border: 1px solid rgba(99,102,241,0.1); }
+        .terms-box strong { color: var(--text); }
+        .terms-checkbox { display: flex; align-items: start; gap: 0.5rem; margin-bottom: 1rem; }
+        .terms-checkbox input { width: auto; margin-top: 0.2rem; }
+
+        /* DOC SCANNER */
+        .doc-scanner { background: var(--darker); border-radius: 16px; padding: 2rem; text-align: center; border: 2px dashed rgba(99, 102, 241, 0.3); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; }
+        .doc-scanner:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.05); }
+        .doc-scanner.scanning { border-color: var(--neon-green); border-style: solid; }
+        .doc-scanner input { display: none; }
+        .scan-corner { position: absolute; width: 20px; height: 20px; border: 3px solid var(--neon-green); transition: all 0.3s; }
+        .scan-corner.tl { top: 10px; left: 10px; border-right: none; border-bottom: none; }
+        .scan-corner.tr { top: 10px; right: 10px; border-left: none; border-bottom: none; }
+        .scan-corner.bl { bottom: 10px; left: 10px; border-right: none; border-top: none; }
+        .scan-corner.br { bottom: 10px; right: 10px; border-left: none; border-top: none; }
+        .doc-scanner.scanning .scan-corner { width: 30px; height: 30px; animation: cornerPulse 1s ease-in-out infinite; }
+        @keyframes cornerPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* PROGRESS */
+        .progress-track { width: 100%; height: 8px; background: var(--darker); border-radius: 4px; overflow: hidden; margin: 1rem 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--neon-green)); border-radius: 4px; transition: width 0.5s ease; position: relative; }
+        .progress-fill::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 20px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3)); animation: progressShine 1.5s infinite; }
+        @keyframes progressShine { 0% { transform: translateX(-20px); } 100% { transform: translateX(20px); } }
+
+        /* FOOTER */
+        .footer { text-align: center; padding: 3rem 2rem; border-top: 1px solid rgba(99, 102, 241, 0.1); margin-top: 4rem; color: var(--text-muted); }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .nav-links { display: none; } .hamburger { display: flex; }
+            .cat-orbit-container { width: 300px; height: 300px; } .cat-orbit-ring { width: 240px; height: 240px; } .cat-orbit-item { width: 60px; height: 60px; font-size: 0.5rem; } .cat-orbit-center { width: 80px; height: 80px; font-size: 1rem; }
+            .form-row { grid-template-columns: 1fr; } .payment-methods { grid-template-columns: 1fr; } .map-access-grid { grid-template-columns: 1fr; } .email-access-grid { grid-template-columns: 1fr; } .face-data-points { grid-template-columns: repeat(2, 1fr); } .ai-chat-container { width: 90vw; right: 5vw; }
+        }
+
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .mt-1 { margin-top: 1rem; } .mt-2 { margin-top: 2rem; } .mb-1 { margin-bottom: 1rem; } .mb-2 { margin-bottom: 2rem; }
+    </style>
+</head>
+<body data-theme="dark">
+    <canvas id="particle-canvas"></canvas>
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <div class="verify-effect-container" id="verifyEffect">
+        <div class="verify-particles" id="verifyParticles"></div>
+        <div class="verify-circle" id="verifyCircle">✓</div>
+        <div class="verify-text" id="verifyText">Identity Verified</div>
+    </div>
+
+    <div class="ai-chat-container" id="aiChat">
+        <div class="ai-chat-header">
+            <div class="ai-avatar">🤖</div>
+            <div class="ai-chat-title">SMID AI Assistant</div>
+        </div>
+        <div class="ai-chat-body" id="aiChatBody">
+            <div class="ai-message bot">Hello! I'm your SMID registration assistant. How can I help you today?</div>
+        </div>
+        <div class="ai-chat-input">
+            <input type="text" id="aiChatInput" placeholder="Ask me anything..." onkeypress="if(event.key==='Enter')sendAIMessage()">
+            <button class="btn btn-sm btn-primary" onclick="sendAIMessage()">➤</button>
+        </div>
+    </div>
+    <button class="ai-chat-toggle" id="aiChatToggle" onclick="toggleAIChat()">🤖</button>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">SMID</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="prototype.html">Categories</a>
+            <a href="register.html" class="active">Register</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="idcard.html">ID Card</a>
+            <a href="cloud.html">Cloud</a>
+            <a href="founder.html">Founder</a>
+        </div>
+        <div class="nav-controls">
+            <div class="theme-toggle">
+                <button class="theme-btn" onclick="setTheme('dark')">🌙</button>
+                <button class="theme-btn" onclick="setTheme('light')">☀️</button>
+                <button class="theme-btn" onclick="setTheme('neon')">⚡</button>
+            </div>
+            <div id="authNav"></div>
+            <div class="hamburger" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html">Home</a>
+        <a href="prototype.html">Categories</a>
+        <a href="register.html">Register</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="idcard.html">ID Card</a>
+        <a href="cloud.html">Cloud</a>
+        <a href="founder.html">Founder</a>
+    </div>
+
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">SMID Registration</h2>
+            <p class="section-subtitle">Select your identity category to begin secure verification</p>
+
+            <div class="cat-orbit-container" id="catOrbit">
+                <div class="cat-orbit-ring"></div>
+                <div class="cat-orbit-center">SMID</div>
+                <div class="cat-orbit-item" data-cat="tsmid" onclick="selectCategory('tsmid')">
+                    <span class="cat-icon">🎮</span><span class="cat-label">TSMID</span>
+                </div>
+                <div class="cat-orbit-item" data-cat="tasmid" onclick="selectCategory('tasmid')">
+                    <span class="cat-icon">🎓</span><span class="cat-label">TASMID</span>
+                </div>
+                <div class="cat-orbit-item" data-cat="asmid" onclick="selectCategory('asmid')">
+                    <span class="cat-icon">👤</span><span class="cat-label">ASMID</span>
+                </div>
+                <div class="cat-orbit-item" data-cat="bsmid" onclick="selectCategory('bsmid')">
+                    <span class="cat-icon">🏢</span><span class="cat-label">BSMID</span>
+                </div>
+            </div>
+
+            <div class="text-center mb-2">
+                <button class="btn btn-primary btn-glow btn-shine" id="btnStartReg" onclick="startRegistration()" disabled>
+                    <span>🚀</span> Start Registration
+                </button>
+            </div>
+
+            <div class="wizard-container" id="wizard">
+                <div class="wizard-steps">
+                    <div class="wiz-step active" data-step="1"><div class="wiz-step-num">1</div><div class="wiz-step-label">Verify</div></div>
+                    <div class="wiz-step" data-step="2"><div class="wiz-step-num">2</div><div class="wiz-step-label">Identity</div></div>
+                    <div class="wiz-step" data-step="3"><div class="wiz-step-num">3</div><div class="wiz-step-label">Biometric</div></div>
+                    <div class="wiz-step" data-step="4"><div class="wiz-step-num">4</div><div class="wiz-step-label">Access</div></div>
+                    <div class="wiz-step" data-step="5"><div class="wiz-step-num">5</div><div class="wiz-step-label">Payment</div></div>
+                    <div class="wiz-step" data-step="6"><div class="wiz-step-num">6</div><div class="wiz-step-label">Confirm</div></div>
+                </div>
+                <div class="progress-track"><div class="progress-fill" id="progressFill" style="width: 16%"></div></div>
+
+                <div class="wiz-panel active" id="panel-1">
+                    <h3 style="text-align:center;margin-bottom:0.5rem;font-family:'Orbitron',monospace;">Verification Methods</h3>
+                    <p style="text-align:center;color:var(--text-muted);margin-bottom:1.5rem;font-size:0.9rem;">Choose how you want to verify your identity</p>
+                    <div id="verifyMethodsContainer"></div>
+                    <div class="reg-nav"><span></span><button class="btn btn-primary btn-bounce" onclick="nextStep(2)">Continue →</button></div>
+                </div>
+
+                <div class="wiz-panel" id="panel-2">
+                    <h3 style="text-align:center;margin-bottom:0.5rem;font-family:'Orbitron',monospace;">Identity Information</h3>
+                    <p style="text-align:center;color:var(--text-muted);margin-bottom:1.5rem;font-size:0.9rem;">Enter your personal details</p>
+                    <div id="identityFormContainer"></div>
+                    <div class="reg-nav"><button class="btn btn-outline" onclick="prevStep(1)">← Back</button><button class="btn btn-primary btn-bounce" onclick="nextStep(3)">Continue →</button></div>
+                </div>
+
+                <div class="wiz-panel" id="panel-3">
+                    <h3 style="text-align:center;margin-bottom:0.5rem;font-family:'Orbitron',monospace;">Biometric Verification</h3>
+                    <p style="text-align:center;color:var(--text-muted);margin-bottom:1.5rem;font-size:0.9rem;">Complete face verification for secure identity confirmation</p>
+                    <div id="biometricContainer"></div>
+                    <div class="reg-nav"><button class="btn btn-outline" onclick="prevStep(2)">← Back</button><button class="btn btn-primary btn-bounce" onclick="nextStep(4)">Continue →</button></div>
+                </div>
+
+                <div class="wiz-panel" id="panel-4">
+                    <h3 style="text-align:center;margin-bottom:0.5rem;font-family:'Orbitron',monospace;">Platform Access</h3>
+                    <p style="text-align:center;color:var(--text-muted);margin-bottom:1.5rem;font-size:0.9rem;">Connect your accounts and generate access codes</p>
+                    <div id="accessContainer"></div>
+                    <div class="reg-nav"><button class="btn btn-outline" onclick="prevStep(3)">← Back</button><button class="btn btn-primary btn-bounce" onclick="nextStep(5)">Continue →</button></div>
+                </div>
+
+                <div class="wiz-panel" id="panel-5">
+                    <h3 style="text-align:center;margin-bottom:0.5rem;font-family:'Orbitron',monospace;">Payment Method</h3>
+                    <p style="text-align:center;color:var(--text-muted);margin-bottom:1.5rem;font-size:0.9rem;">Select your preferred payment option</p>
+                    <div class="payment-methods" id="paymentContainer">
+                        <div class="payment-method" onclick="selectPayment(this, 'card')"><div class="payment-method-icon">💳</div><div class="payment-method-name">Credit Card</div></div>
+                        <div class="payment-method" onclick="selectPayment(this, 'paypal')"><div class="payment-method-icon">🅿️</div><div class="payment-method-name">PayPal</div></div>
+                        <div class="payment-method" onclick="selectPayment(this, 'crypto')"><div class="payment-method-icon">₿</div><div class="payment-method-name">Crypto</div></div>
+                    </div>
+                    <div id="paymentForm" style="display:none;">
+                        <div class="form-group"><label>Card Number</label><input type="text" placeholder="0000 0000 0000 0000" id="cardNumber"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Expiry</label><input type="text" placeholder="MM/YY" id="cardExpiry"></div>
+                            <div class="form-group"><label>CVC</label><input type="text" placeholder="123" id="cardCvc"></div>
+                        </div>
+                    </div>
+                    <div class="reg-nav"><button class="btn btn-outline" onclick="prevStep(4)">← Back</button><button class="btn btn-primary btn-bounce" onclick="nextStep(6)">Continue →</button></div>
+                </div>
+
+                <div class="wiz-panel" id="panel-6">
+                    <h3 style="text-align:center;margin-bottom:0.5rem;font-family:'Orbitron',monospace;">Review & Confirm</h3>
+                    <p style="text-align:center;color:var(--text-muted);margin-bottom:1.5rem;font-size:0.9rem;">Verify all information before submission</p>
+                    <div id="reviewContainer" style="background:var(--darker);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;"></div>
+                    <div class="terms-checkbox"><input type="checkbox" id="finalConsent"><label for="finalConsent">I agree to the <a href="#" style="color:var(--primary);">Terms of Service</a>, <a href="#" style="color:var(--primary);">Privacy Policy</a>, and consent to biometric data processing for identity verification.</label></div>
+                    <div class="reg-nav"><button class="btn btn-outline" onclick="prevStep(5)">← Back</button><button class="btn btn-primary btn-glow btn-shine" onclick="submitRegistration()">✓ Submit Application</button></div>
+                </div>
+
+                <div class="wiz-panel" id="panel-success" style="text-align:center;padding:2rem 0;">
+                    <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--neon-green),var(--success));display:flex;align-items:center;justify-content:center;font-size:3rem;margin:0 auto 1.5rem;animation:pulseFrame 2s infinite;">✓</div>
+                    <h3 style="margin-bottom:0.5rem;font-family:'Orbitron',monospace;">Registration Complete!</h3>
+                    <p style="color:var(--text-muted);max-width:400px;margin:0 auto 1.5rem;">Your SMID identity has been secured. Your access code is ready.</p>
+                    <div class="access-code-container">
+                        <div class="access-code-label">Your Social Media Access Code</div>
+                        <div class="access-code-display" id="finalAccessCode">SMID-XXXX-XXXX</div>
+                        <div class="access-code-platforms" id="finalPlatforms"></div>
+                    </div>
+                    <div style="margin-top:1.5rem;"><a href="dashboard.html" class="btn btn-primary">Go to Dashboard</a><button class="btn btn-outline" onclick="copyAccessCode()">📋 Copy Code</button></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p style="font-family: 'Orbitron', monospace; font-size: 1.5rem; margin-bottom: 1rem; background: linear-gradient(135deg, var(--secondary), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">SMID</p>
+        <p>Identity Today, Safety Tomorrow.</p>
+        <p style="margin-top: 1rem; font-size: 0.85rem;">© 2026 SMID Platform. Founded by Oluwatosin Abraham Willoughby. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // ========== STATE ==========
+        let regData = {
+            category: '', step: 1, verificationMethod: '',
+            name: '', petName: '', parentName: '', parentPetName: '', teenName: '', teenAge: '',
+            businessName: '', dob: '', country: '', phone: '', email: '',
+            faceVerified: false, face2Verified: false,
+            mapAccess: [], emailAccess: [], accessCode: '',
+            paymentMethod: '', termsAccepted: false
+        };
+
+        const categoryConfig = {
+            tsmid: {
+                name: 'TSMID', label: 'Teen Social Media ID', color: 'var(--neon-green)', icon: '🎮', price: 'FREE',
+                verificationMethods: ['Birth Certificate', 'Parent ID', 'School ID'],
+                fields: ['parentName', 'parentPetName', 'teenName', 'teenAge', 'dob', 'birthCert', 'country', 'phone', 'email'],
+                faceScans: 1, maps: true, emails: true, payment: false
+            },
+            tasmid: {
+                name: 'TASMID', label: 'Teen/Adult Student ID', color: 'var(--warning)', icon: '🎓', price: '$4.99/mo',
+                verificationMethods: ['Parent Birth Certificate', 'Student ID', 'School Email'],
+                fields: ['parentName', 'parentPetName', 'teenName', 'teenAge', 'parentBirthCert', 'country', 'phone', 'email'],
+                faceScans: 2, maps: true, emails: true, payment: true
+            },
+            asmid: {
+                name: 'ASMID', label: 'Adult Social Media ID', color: 'var(--neon-blue)', icon: '👤', price: '$9.99/mo',
+                verificationMethods: ['Government ID', 'Passport', 'Driver License'],
+                fields: ['name', 'petName', 'dob', 'country', 'phone', 'email'],
+                faceScans: 1, maps: true, emails: true, payment: true
+            },
+            bsmid: {
+                name: 'BSMID', label: 'Business Social Media ID', color: 'var(--neon-purple)', icon: '🏢', price: '$29.99/mo',
+                verificationMethods: ['Business Registration', 'Tax ID', 'Government Verification'],
+                fields: ['businessName', 'govVerification', 'country', 'phone', 'email'],
+                faceScans: 1, maps: true, emails: true, payment: true
+            }
+        };
+
+        // ========== PARTICLES ==========
+        (function initParticles() {
+            const canvas = document.getElementById('particle-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+            resize();
+            window.addEventListener('resize', resize);
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5;
+                    this.size = Math.random() * 2 + 1;
+                }
+                update() {
+                    this.x += this.vx; this.y += this.vy;
+                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                }
+                draw() {
+                    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#6366f1';
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+            function init() {
+                particles = [];
+                const count = Math.min(80, (canvas.width * canvas.height) / 15000);
+                for (let i = 0; i < count; i++) particles.push(new Particle());
+            }
+            init();
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => { p.update(); p.draw(); });
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 150) {
+                            ctx.strokeStyle = `rgba(99, 102, 241, ${0.15 * (1 - dist / 150)})`;
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
+
+        // ========== THEME ==========
+        function setTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+            localStorage.setItem('smid_theme', theme);
+        }
+        function loadTheme() {
+            const saved = localStorage.getItem('smid_theme');
+            if (saved) {
+                document.body.setAttribute('data-theme', saved);
+                document.querySelectorAll('.theme-btn').forEach(btn => {
+                    if ((saved === 'dark' && btn.textContent.includes('🌙')) ||
+                        (saved === 'light' && btn.textContent.includes('☀️')) ||
+                        (saved === 'neon' && btn.textContent.includes('⚡'))) {
+                        btn.classList.add('active');
+                    }
+                });
+            } else {
+                document.body.setAttribute('data-theme', 'dark');
+                document.querySelector('.theme-btn')?.classList.add('active');
+            }
+        }
+
+        // ========== MOBILE MENU ==========
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const hamburger = document.querySelector('.hamburger');
+            menu.classList.toggle('open');
+            hamburger.classList.toggle('active');
+        }
+
+        // ========== NOTIFICATIONS ==========
+        function showNotification(title, text, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            if (!container) return;
+            const notif = document.createElement('div');
+            notif.className = `notification ${type}`;
+            const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ', ai: '🤖' };
+            notif.innerHTML = `<div class="notification-title">${icons[type] || 'ℹ'} ${title}</div><div class="notification-text">${text}</div>`;
+            container.appendChild(notif);
+            requestAnimationFrame(() => notif.classList.add('show'));
+            setTimeout(() => {
+                notif.style.transform = 'translateX(400px)';
+                notif.style.opacity = '0';
+                setTimeout(() => notif.remove(), 400);
+            }, 4000);
+        }
+
+        // ========== AI CHAT ==========
+        function toggleAIChat() {
+            const chat = document.getElementById('aiChat');
+            const toggle = document.getElementById('aiChatToggle');
+            chat.classList.toggle('open');
+            toggle.classList.toggle('active');
+        }
+        function sendAIMessage() {
+            const input = document.getElementById('aiChatInput');
+            const body = document.getElementById('aiChatBody');
+            const text = input.value.trim();
+            if (!text) return;
+            const userMsg = document.createElement('div');
+            userMsg.className = 'ai-message user';
+            userMsg.textContent = text;
+            body.appendChild(userMsg);
+            input.value = '';
+            body.scrollTop = body.scrollHeight;
+
+            // AI response simulation
+            setTimeout(() => {
+                const botMsg = document.createElement('div');
+                botMsg.className = 'ai-message bot';
+                const responses = [
+                    'I understand. Let me help you with that registration step.',
+                    'Great question! For your selected category, you will need to provide the required documents.',
+                    'Your identity security is our priority. All biometric data is encrypted.',
+                    'You can switch categories anytime before submission. Just click the circular menu.',
+                    'The face scanner uses advanced AI to verify your identity securely.',
+                    'Your access code will be generated after successful verification.',
+                    'Need help with payment? We support Credit Card, PayPal, and Crypto.',
+                    'Your parent/guardian information is required for TSMID and TASMID verification.'
+                ];
+                botMsg.textContent = responses[Math.floor(Math.random() * responses.length)];
+                body.appendChild(botMsg);
+                body.scrollTop = body.scrollHeight;
+            }, 1000 + Math.random() * 1000);
+        }
+
+        // ========== VERIFICATION EFFECTS ==========
+        function showVerifyEffect(text = 'Identity Verified') {
+            const container = document.getElementById('verifyEffect');
+            const particles = document.getElementById('verifyParticles');
+            const circle = document.getElementById('verifyCircle');
+            const txt = document.getElementById('verifyText');
+            txt.textContent = text;
+            container.classList.add('active');
+            // Create particles
+            particles.innerHTML = '';
+            for (let i = 0; i < 30; i++) {
+                const p = document.createElement('div');
+                p.className = 'verify-particle';
+                p.style.left = '50%';
+                p.style.top = '50%';
+                const angle = (Math.PI * 2 * i) / 30;
+                const dist = 100 + Math.random() * 200;
+                p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+                p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+                p.style.animationDelay = (Math.random() * 0.3) + 's';
+                particles.appendChild(p);
+            }
+            setTimeout(() => container.classList.remove('active'), 2000);
+        }
+
+        // ========== CATEGORY SELECTION ==========
+        function selectCategory(cat) {
+            regData.category = cat;
+            document.querySelectorAll('.cat-orbit-item').forEach(c => c.classList.remove('selected'));
+            document.querySelector(`.cat-orbit-item[data-cat="${cat}"]`).classList.add('selected');
+            document.getElementById('btnStartReg').disabled = false;
+            const config = categoryConfig[cat];
+            showNotification('Category Selected', `${config.icon} ${config.name} — ${config.label}`, 'success');
+        }
+
+        function startRegistration() {
+            if (!regData.category) return;
+            document.getElementById('catOrbit').style.display = 'none';
+            document.getElementById('btnStartReg').style.display = 'none';
+            document.querySelector('.section-subtitle').textContent = `Complete your ${categoryConfig[regData.category].name} verification`;
+            document.getElementById('wizard').classList.add('active');
+            renderStep1();
+            renderStep2();
+            renderStep3();
+            renderStep4();
+            showAIWelcome();
+        }
+
+        function showAIWelcome() {
+            const body = document.getElementById('aiChatBody');
+            const msg = document.createElement('div');
+            msg.className = 'ai-message bot';
+            msg.textContent = `Welcome to ${categoryConfig[regData.category].name} registration! I'm here to guide you through each step. Ask me anything!`;
+            body.appendChild(msg);
+        }
+
+        // ========== RENDER STEP 1: VERIFICATION METHODS ==========
+        function renderStep1() {
+            const config = categoryConfig[regData.category];
+            const container = document.getElementById('verifyMethodsContainer');
+            let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">';
+            config.verificationMethods.forEach((method, i) => {
+                html += `
+                    <div class="payment-method" onclick="selectVerifyMethod(this, '${method}')" style="padding:1.5rem;">
+                        <div style="font-size:2.5rem;margin-bottom:0.5rem;">${['📄', '🪪', '📧'][i]}</div>
+                        <div style="font-weight:700;font-size:0.95rem;">${method}</div>
+                        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.3rem;">Click to select</div>
+                    </div>`;
+            });
+            html += '</div>';
+            html += `
+                <div id="docUploadArea" style="display:none;margin-top:1.5rem;">
+                    <div class="doc-scanner" onclick="document.getElementById('docUpload').click()">
+                        <input type="file" id="docUpload" accept="image/*,.pdf" onchange="handleDocUpload(this)">
+                        <div class="scan-corner tl"></div><div class="scan-corner tr"></div>
+                        <div class="scan-corner bl"></div><div class="scan-corner br"></div>
+                        <div style="font-size:2.5rem;margin-bottom:0.5rem;">📤</div>
+                        <div style="font-weight:600;">Upload Document</div>
+                        <div style="font-size:0.85rem;color:var(--text-muted);margin-top:0.3rem;">JPG, PNG, or PDF</div>
+                        <div id="docStatus" style="color:var(--neon-green);margin-top:0.5rem;display:none;">✓ Document uploaded</div>
+                    </div>
+                </div>`;
+            container.innerHTML = html;
+        }
+
+        function selectVerifyMethod(el, method) {
+            regData.verificationMethod = method;
+            document.querySelectorAll('#verifyMethodsContainer .payment-method').forEach(m => m.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('docUploadArea').style.display = 'block';
+            showNotification('Method Selected', `You selected: ${method}`, 'success');
+        }
+
+        function handleDocUpload(input) {
+            if (input.files && input.files[0]) {
+                document.querySelector('.doc-scanner').classList.add('scanning');
+                setTimeout(() => {
+                    document.querySelector('.doc-scanner').classList.remove('scanning');
+                    document.getElementById('docStatus').style.display = 'block';
+                    showNotification('Success', 'Document uploaded and scanned', 'success');
+                }, 2000);
+            }
+        }
+
+        // ========== RENDER STEP 2: IDENTITY FORM ==========
+        function renderStep2() {
+            const config = categoryConfig[regData.category];
+            const container = document.getElementById('identityFormContainer');
+            let html = '';
+
+            if (regData.category === 'tsmid') {
+                html += `
+                    <div style="background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);border-radius:12px;padding:1rem;margin-bottom:1.5rem;color:var(--neon-green);font-size:0.9rem;">
+                        <strong>👨‍👩‍👧 Parent/Guardian Required</strong><br>
+                        TSMID applicants (ages 13-17) must provide parent or guardian information and consent.
+                    </div>
+                    <h4 style="color:var(--neon-green);margin-bottom:1rem;font-size:0.95rem;">🛡️ Parent / Guardian Information</h4>
+                    <div class="form-row">
+                        <div class="form-group"><label>Parent/Guardian Full Name *</label><input type="text" id="parentName" placeholder="Full legal name"></div>
+                        <div class="form-group"><label>Parent/Guardian Pet Name</label><input type="text" id="parentPetName" placeholder="Pet name (optional)"></div>
+                    </div>
+                    <div class="form-group"><label>Parent/Guardian Phone Number *</label><input type="tel" id="parentPhone" placeholder="+1 (555) 000-0000"></div>
+                    <div class="form-group"><label>Parent/Guardian Email *</label><input type="email" id="parentEmail" placeholder="parent@email.com"></div>
+                    <div class="form-group">
+                        <label>Relationship to Teen *</label>
+                        <select id="guardianRelation"><option value="">Select relationship...</option><option value="mother">Mother</option><option value="father">Father</option><option value="legal_guardian">Legal Guardian</option><option value="grandparent">Grandparent</option><option value="other">Other</option></select>
+                    </div>
+                    <div style="border-top:1px solid rgba(99,102,241,0.1);margin:1.5rem 0;"></div>
+                    <h4 style="color:var(--neon-green);margin-bottom:1rem;font-size:0.95rem;">👤 Teen Information</h4>
+                    <div class="form-row">
+                        <div class="form-group"><label>Teen Full Name *</label><input type="text" id="teenName" placeholder="Teen's full name"></div>
+                        <div class="form-group"><label>Teen Age *</label><input type="number" id="teenAge" placeholder="13-17" min="13" max="17"></div>
+                    </div>`;
+            } else if (regData.category === 'tasmid') {
+                html += `
+                    <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:12px;padding:1rem;margin-bottom:1.5rem;color:var(--warning);font-size:0.9rem;">
+                        <strong>🎓 Student Verification Required</strong><br>
+                        TASMID requires parent birth certificate and student information.
+                    </div>
+                    <h4 style="color:var(--warning);margin-bottom:1rem;font-size:0.95rem;">👨‍👩‍👧 Parent Information</h4>
+                    <div class="form-row">
+                        <div class="form-group"><label>Parent Full Name *</label><input type="text" id="parentName" placeholder="Parent's full name"></div>
+                        <div class="form-group"><label>Parent Pet Name</label><input type="text" id="parentPetName" placeholder="Pet name (optional)"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Parent Birth Certificate Upload *</label>
+                        <div class="doc-scanner" onclick="document.getElementById('parentBirthCert').click()">
+                            <input type="file" id="parentBirthCert" accept="image/*,.pdf" style="display:none;" onchange="handleParentCert(this)">
+                            <div class="scan-corner tl"></div><div class="scan-corner tr"></div><div class="scan-corner bl"></div><div class="scan-corner br"></div>
+                            <div style="font-size:2rem;">📄</div><div style="font-weight:600;font-size:0.9rem;">Upload Parent Birth Certificate</div>
+                            <div id="parentCertStatus" style="color:var(--neon-green);display:none;margin-top:0.5rem;">✓ Uploaded</div>
+                        </div>
+                    </div>
+                    <div style="border-top:1px solid rgba(99,102,241,0.1);margin:1.5rem 0;"></div>
+                    <h4 style="color:var(--warning);margin-bottom:1rem;font-size:0.95rem;">🎓 Teen/Student Information</h4>
+                    <div class="form-row">
+                        <div class="form-group"><label>Teen/Student Name *</label><input type="text" id="teenName" placeholder="Student's full name"></div>
+                        <div class="form-group"><label>Teen Age *</label><input type="number" id="teenAge" placeholder="18+" min="18" max="25"></div>
+                    </div>`;
+            } else if (regData.category === 'asmid') {
+                html += `
+                    <div class="form-row">
+                        <div class="form-group"><label>Full Name *</label><input type="text" id="userName" placeholder="Your full name"></div>
+                        <div class="form-group"><label>Pet Name</label><input type="text" id="petName" placeholder="Your pet name (optional)"></div>
+                    </div>`;
+            } else if (regData.category === 'bsmid') {
+                html += `
+                    <div class="form-group"><label>Business/Brand Name *</label><input type="text" id="businessName" placeholder="Official business name"></div>
+                    <div class="form-group">
+                        <label>Government Verification Document *</label>
+                        <div class="doc-scanner" onclick="document.getElementById('govDoc').click()">
+                            <input type="file" id="govDoc" accept="image/*,.pdf" style="display:none;" onchange="handleGovDoc(this)">
+                            <div class="scan-corner tl"></div><div class="scan-corner tr"></div><div class="scan-corner bl"></div><div class="scan-corner br"></div>
+                            <div style="font-size:2rem;">🏛️</div><div style="font-weight:600;font-size:0.9rem;">Upload Government Verification</div>
+                            <div style="font-size:0.8rem;color:var(--text-muted);">Business registration, tax ID, etc.</div>
+                            <div id="govDocStatus" style="color:var(--neon-green);display:none;margin-top:0.5rem;">✓ Uploaded</div>
+                        </div>
+                    </div>
+                    <div class="terms-box" style="margin-top:1rem;">
+                        <strong>Terms & Conditions for Business Verification</strong><br><br>
+                        By submitting government verification documents, you confirm that:<br>
+                        • Your business is legally registered in your country<br>
+                        • You have authority to represent this business<br>
+                        • All submitted documents are authentic and valid<br>
+                        • SMID may verify your business with government databases<br>
+                        • You consent to periodic re-verification<br>
+                        • False information will result in account termination
+                    </div>
+                    <div class="terms-checkbox"><input type="checkbox" id="govTerms"><label for="govTerms">I agree to the government verification terms and conditions</label></div>`;
+            }
+
+            // Common fields for all except BSMID (which has its own)
+            if (regData.category !== 'bsmid') {
+                html += `
+                    <div class="form-group"><label>Date of Birth *</label><input type="date" id="userDob" required></div>
+                    <div class="terms-box">
+                        <strong>Age Verification Terms & Conditions</strong><br><br>
+                        By providing your date of birth, you confirm that:<br>
+                        • You are truthful about your age<br>
+                        • You understand age-appropriate restrictions apply<br>
+                        • False age information violates our terms<br>
+                        • SMID uses age data for safety features<br>
+                        • Parents/guardians are responsible for minors
+                    </div>
+                    <div class="terms-checkbox"><input type="checkbox" id="ageTerms"><label for="ageTerms">I confirm my date of birth is accurate and agree to age verification terms</label></div>`;
+            }
+
+            // Birth certificate for TSMID
+            if (regData.category === 'tsmid') {
+                html += `
+                    <div class="form-group">
+                        <label>Birth Certificate Upload *</label>
+                        <div class="doc-scanner" onclick="document.getElementById('birthCert').click()">
+                            <input type="file" id="birthCert" accept="image/*,.pdf" style="display:none;" onchange="handleBirthCert(this)">
+                            <div class="scan-corner tl"></div><div class="scan-corner tr"></div><div class="scan-corner bl"></div><div class="scan-corner br"></div>
+                            <div style="font-size:2rem;">📄</div><div style="font-weight:600;font-size:0.9rem;">Upload Birth Certificate</div>
+                            <div id="birthCertStatus" style="color:var(--neon-green);display:none;margin-top:0.5rem;">✓ Uploaded</div>
+                        </div>
+                    </div>`;
+            }
+
+            // Common fields
+            html += `
+                <div class="form-group"><label>Country / Region *</label>
+                    <select id="userCountry" required>
+                        <option value="">Select country...</option>
+                        <option value="us">🇺🇸 United States</option>
+                        <option value="uk">🇬🇧 United Kingdom</option>
+                        <option value="ca">🇨🇦 Canada</option>
+                        <option value="ng">🇳🇬 Nigeria</option>
+                        <option value="br">🇧🇷 Brazil</option>
+                        <option value="fr">🇫🇷 France</option>
+                        <option value="de">🇩🇪 Germany</option>
+                        <option value="in">🇮🇳 India</option>
+                        <option value="jp">🇯🇵 Japan</option>
+                        <option value="au">🇦🇺 Australia</option>
+                        <option value="other">🌍 Other</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Phone Number *</label><input type="tel" id="userPhone" placeholder="+1 (555) 000-0000" required></div>
+                <div class="form-group"><label>Email Address *</label><input type="email" id="userEmail" placeholder="your@email.com" required></div>`;
+
+            container.innerHTML = html;
+        }
+
+        function handleParentCert(input) { if (input.files && input.files[0]) { document.getElementById('parentCertStatus').style.display = 'block'; showNotification('Success', 'Parent birth certificate uploaded', 'success'); } }
+        function handleGovDoc(input) { if (input.files && input.files[0]) { document.getElementById('govDocStatus').style.display = 'block'; showNotification('Success', 'Government document uploaded', 'success'); } }
+        function handleBirthCert(input) { if (input.files && input.files[0]) { document.getElementById('birthCertStatus').style.display = 'block'; showNotification('Success', 'Birth certificate uploaded', 'success'); } }
+
+        // ========== RENDER STEP 3: BIOMETRIC ==========
+        function renderStep3() {
+            const config = categoryConfig[regData.category];
+            const container = document.getElementById('biometricContainer');
+            let html = '';
+
+            for (let i = 1; i <= config.faceScans; i++) {
+                html += `
+                    <div class="face-scanner-container" id="faceScanContainer${i}">
+                        <div class="face-scanner-ring" id="faceRing${i}">
+                            <div class="face-scanner-inner" id="faceInner${i}">
+                                👤
+                                <div class="face-grid-overlay" id="faceGrid${i}">
+                                    ${Array(16).fill('<div class="face-grid-cell"></div>').join('')}
+                                </div>
+                                <div class="face-scan-line" id="faceLine${i}"></div>
+                            </div>
+                            <div class="face-scan-progress"><div class="face-scan-progress-fill" id="faceProgress${i}"></div></div>
+                        </div>
+                        <div class="face-scan-status" id="faceStatus${i}">Ready to scan</div>
+                        <div class="face-data-points" id="faceData${i}">
+                            <div class="face-data-point" id="fd-eyeL${i}">👁️ Left Eye</div>
+                            <div class="face-data-point" id="fd-eyeR${i}">👁️ Right Eye</div>
+                            <div class="face-data-point" id="fd-nose${i}">👃 Nose</div>
+                            <div class="face-data-point" id="fd-mouth${i}">👄 Mouth</div>
+                            <div class="face-data-point" id="fd-jaw${i}">🦴 Jaw</div>
+                            <div class="face-data-point" id="fd-forehead${i}">🧠 Forehead</div>
+                        </div>
+                        <button class="btn btn-primary btn-glow" id="btnFaceScan${i}" onclick="startFaceScan(${i})">
+                            <span>📷</span> Start Face Scan ${config.faceScans > 1 ? i : ''}
+                        </button>
+                    </div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function startFaceScan(scanNum) {
+            const ring = document.getElementById(`faceRing${scanNum}`);
+            const inner = document.getElementById(`faceInner${scanNum}`);
+            const grid = document.getElementById(`faceGrid${scanNum}`);
+            const line = document.getElementById(`faceLine${scanNum}`);
+            const progress = document.getElementById(`faceProgress${scanNum}`);
+            const status = document.getElementById(`faceStatus${scanNum}`);
+            const btn = document.getElementById(`btnFaceScan${scanNum}`);
+
+            btn.disabled = true;
+            btn.innerHTML = '<span>📷</span> Scanning...';
+            ring.classList.add('scanning');
+            grid.style.display = 'grid';
+            line.style.display = 'block';
+            status.textContent = 'Scanning face...';
+            status.className = 'face-scan-status scanning';
+
+            // Animate grid cells
+            const cells = grid.querySelectorAll('.face-grid-cell');
+            let cellIdx = 0;
+            const cellInterval = setInterval(() => {
+                if (cellIdx < cells.length) {
+                    cells[cellIdx].classList.add('active');
+                    cellIdx++;
+                }
+            }, 200);
+
+            // Animate data points
+            const dataPoints = ['fd-eyeL', 'fd-eyeR', 'fd-nose', 'fd-mouth', 'fd-jaw', 'fd-forehead'];
+            let dataIdx = 0;
+            const dataInterval = setInterval(() => {
+                if (dataIdx < dataPoints.length) {
+                    document.getElementById(`${dataPoints[dataIdx]}${scanNum}`).classList.add('detected');
+                    dataIdx++;
+                }
+            }, 400);
+
+            // Progress
+            let pct = 0;
+            const progressInterval = setInterval(() => {
+                pct += 2;
+                progress.style.width = pct + '%';
+                if (pct >= 100) {
+                    clearInterval(progressInterval);
+                    clearInterval(cellInterval);
+                    clearInterval(dataInterval);
+                    // Complete
+                    ring.classList.remove('scanning');
+                    ring.classList.add('completed');
+                    inner.innerHTML = '✓';
+                    inner.style.fontSize = '4rem';
+                    inner.style.color = 'var(--neon-green)';
+                    status.textContent = '✓ Face verified';
+                    status.className = 'face-scan-status complete';
+                    btn.innerHTML = '<span>✓</span> Verified';
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-outline');
+                    if (scanNum === 1) regData.faceVerified = true;
+                    if (scanNum === 2) regData.face2Verified = true;
+                    showVerifyEffect('Face Verified');
+                    showNotification('Success', `Face scan ${scanNum} complete`, 'success');
+                }
+            }, 60);
+        }
+
+        // ========== RENDER STEP 4: PLATFORM ACCESS ==========
+        function renderStep4() {
+            const config = categoryConfig[regData.category];
+            const container = document.getElementById('accessContainer');
+            let html = '';
+
+            // Map Access
+            if (config.maps) {
+                html += `
+                    <h4 style="font-family:'Orbitron',monospace;font-size:0.9rem;color:var(--primary-glow);margin-bottom:0.8rem;">🗺️ Map Access</h4>
+                    <div class="map-access-grid">
+                        <a href="https://maps.google.com" target="_blank" class="map-access-btn">
+                            <div class="map-icon">🗺️</div><div class="map-label">Google Maps</div><div class="map-desc">Verify location</div>
+                        </a>
+                        <a href="https://maps.apple.com" target="_blank" class="map-access-btn">
+                            <div class="map-icon">🍎</div><div class="map-label">Apple Maps</div><div class="map-desc">iOS location</div>
+                        </a>
+                    </div>`;
+            }
+
+            // Email Access
+            if (config.emails) {
+                html += `
+                    <h4 style="font-family:'Orbitron',monospace;font-size:0.9rem;color:var(--primary-glow);margin-bottom:0.8rem;margin-top:1.5rem;">📧 Email Access</h4>
+                    <div class="email-access-grid">
+                        <a href="https://gmail.com" target="_blank" class="email-access-btn">
+                            <div class="email-icon">📧</div><div class="email-label">Gmail</div>
+                        </a>
+                        <a href="https://outlook.com" target="_blank" class="email-access-btn">
+                            <div class="email-icon">📨</div><div class="email-label">Microsoft</div>
+                        </a>
+                    </div>`;
+            }
+
+            // Access Code Generator
+            html += `
+                <h4 style="font-family:'Orbitron',monospace;font-size:0.9rem;color:var(--primary-glow);margin-bottom:0.8rem;margin-top:1.5rem;">🔐 Social Media Access Code</h4>
+                <div class="access-code-container">
+                    <div class="access-code-label">Your Unique Access Code</div>
+                    <div class="access-code-display" id="accessCodeDisplay">••••-••••-••••</div>
+                    <div class="access-code-platforms">
+                        <div class="platform-badge">📘 Facebook</div>
+                        <div class="platform-badge">🐦 Twitter</div>
+                        <div class="platform-badge">📸 Instagram</div>
+                        <div class="platform-badge">💼 LinkedIn</div>
+                        <div class="platform-badge">🎵 TikTok</div>
+                    </div>
+                </div>
+                <div class="text-center mt-1">
+                    <button class="btn btn-primary btn-glow" onclick="generateAccessCode()">
+                        <span>🔑</span> Generate Access Code
+                    </button>
+                </div>`;
+
+            container.innerHTML = html;
+        }
+
+        function generateAccessCode() {
+            const code = 'SMID-' + Math.random().toString(36).substr(2, 4).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+            regData.accessCode = code;
+            document.getElementById('accessCodeDisplay').textContent = code;
+            showNotification('Success', 'Access code generated! Use this to connect your social media accounts.', 'success');
+            // Animate platforms
+            document.querySelectorAll('.platform-badge').forEach((badge, i) => {
+                setTimeout(() => badge.classList.add('verified'), i * 200);
+            });
+        }
+
+        // ========== PAYMENT ==========
+        function selectPayment(el, method) {
+            regData.paymentMethod = method;
+            document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('paymentForm').style.display = 'block';
+            showNotification('Payment Selected', `${method.toUpperCase()} selected`, 'success');
+        }
+
+        // ========== NAVIGATION ==========
+        function nextStep(step) {
+            if (step === 2 && !regData.verificationMethod) {
+                showNotification('Error', 'Please select a verification method', 'error'); return;
+            }
+            if (step === 3) {
+                // Validate identity fields
+                const required = ['userPhone', 'userEmail', 'userCountry'];
+                if (regData.category !== 'bsmid') required.push('userDob');
+                for (let id of required) {
+                    const el = document.getElementById(id);
+                    if (el && !el.value) { showNotification('Error', 'Please fill all required fields', 'error'); return; }
+                }
+                // TSMID specific
+                if (regData.category === 'tsmid') {
+                    if (!document.getElementById('parentName')?.value || !document.getElementById('guardianRelation')?.value) {
+                        showNotification('Error', 'Please fill all parent/guardian fields', 'error'); return;
+                    }
+                }
+            }
+            if (step === 4) {
+                const config = categoryConfig[regData.category];
+                if (config.faceScans >= 1 && !regData.faceVerified) {
+                    showNotification('Error', 'Please complete face verification', 'error'); return;
+                }
+                if (config.faceScans >= 2 && !regData.face2Verified) {
+                    showNotification('Error', 'Please complete both face scans', 'error'); return;
+                }
+            }
+            if (step === 6) {
+                renderReview();
+            }
+
+            regData.step = step;
+            document.querySelectorAll('.wiz-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-' + step).classList.add('active');
+            document.querySelectorAll('.wiz-step').forEach(s => {
+                const sNum = parseInt(s.dataset.step);
+                s.classList.remove('active', 'done');
+                if (sNum === step) s.classList.add('active');
+                else if (sNum < step) s.classList.add('done');
+            });
+            document.getElementById('progressFill').style.width = (step / 6 * 100) + '%';
+        }
+
+        function prevStep(step) {
+            regData.step = step;
+            document.querySelectorAll('.wiz-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-' + step).classList.add('active');
+            document.querySelectorAll('.wiz-step').forEach(s => {
+                const sNum = parseInt(s.dataset.step);
+                s.classList.remove('active', 'done');
+                if (sNum === step) s.classList.add('active');
+                else if (sNum < step) s.classList.add('done');
+            });
+            document.getElementById('progressFill').style.width = (step / 6 * 100) + '%';
+        }
+
+        // ========== REVIEW ==========
+        function renderReview() {
+            const config = categoryConfig[regData.category];
+            const container = document.getElementById('reviewContainer');
+            let html = '';
+
+            const addRow = (label, value) => `<div style="display:flex;justify-content:space-between;padding:0.6rem 0;border-bottom:1px solid rgba(99,102,241,0.1);"><span style="color:var(--text-muted);font-size:0.9rem;">${label}</span><span style="font-weight:600;">${value}</span></div>`;
+
+            html += addRow('Category', `${config.icon} ${config.name}`);
+            html += addRow('Verification', regData.verificationMethod);
+
+            if (regData.category === 'tsmid') {
+                html += addRow('Parent/Guardian', document.getElementById('parentName')?.value || '-');
+                html += addRow('Teen Name', document.getElementById('teenName')?.value || '-');
+                html += addRow('Teen Age', document.getElementById('teenAge')?.value || '-');
+            } else if (regData.category === 'tasmid') {
+                html += addRow('Parent Name', document.getElementById('parentName')?.value || '-');
+                html += addRow('Student Name', document.getElementById('teenName')?.value || '-');
+                html += addRow('Student Age', document.getElementById('teenAge')?.value || '-');
+            } else if (regData.category === 'asmid') {
+                html += addRow('Name', document.getElementById('userName')?.value || '-');
+                html += addRow('Pet Name', document.getElementById('petName')?.value || '-');
+            } else if (regData.category === 'bsmid') {
+                html += addRow('Business', document.getElementById('businessName')?.value || '-');
+            }
+
+            if (regData.category !== 'bsmid') {
+                html += addRow('Date of Birth', document.getElementById('userDob')?.value || '-');
+            }
+            html += addRow('Country', document.getElementById('userCountry')?.value.toUpperCase() || '-');
+            html += addRow('Phone', document.getElementById('userPhone')?.value || '-');
+            html += addRow('Email', document.getElementById('userEmail')?.value || '-');
+            html += addRow('Face Scan', regData.faceVerified ? '✓ Complete' : '✗ Pending');
+            if (config.faceScans > 1) html += addRow('Face Scan 2', regData.face2Verified ? '✓ Complete' : '✗ Pending');
+            html += addRow('Access Code', regData.accessCode || 'Not generated');
+            html += addRow('Payment', regData.paymentMethod ? regData.paymentMethod.toUpperCase() : 'N/A');
+
+            container.innerHTML = html;
+        }
+
+        // ========== SUBMIT ==========
+        function submitRegistration() {
+            if (!document.getElementById('finalConsent').checked) {
+                showNotification('Error', 'Please accept the terms and conditions', 'error'); return;
+            }
+            const appId = 'SMID-' + new Date().getFullYear() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            document.getElementById('finalAccessCode').textContent = regData.accessCode || appId;
+
+            // Generate final platforms
+            const platforms = ['📘 Facebook', '🐦 Twitter', '📸 Instagram', '💼 LinkedIn', '🎵 TikTok'];
+            document.getElementById('finalPlatforms').innerHTML = platforms.map(p =>
+                `<div class="platform-badge verified">${p}</div>`
+            ).join('');
+
+            document.querySelectorAll('.wiz-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-success').classList.add('active');
+            document.querySelectorAll('.wiz-step').forEach(s => s.classList.add('done'));
+            document.getElementById('progressFill').style.width = '100%';
+            showVerifyEffect('Registration Complete!');
+            showNotification('Success', 'Your SMID identity is now secured!', 'success');
+        }
+
+        function copyAccessCode() {
+            const code = document.getElementById('finalAccessCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showNotification('Copied', 'Access code copied to clipboard!', 'success');
+            });
+        }
+
+        // ========== INIT ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            showNotification('Welcome', 'Select your SMID category to begin registration', 'info');
+        });
+    </script>
+</body>
+</html>

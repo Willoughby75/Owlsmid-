@@ -1,0 +1,6 @@
+{
+  "name": "SMID Platform",
+  "description": "Social Media Identification Platform - Identity Today, Safety Tomorrow. Founded by Oluwatosin Abraham Willoughby.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

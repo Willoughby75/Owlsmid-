@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMID — Digital ID Card</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .id-card-container { max-width: 500px; margin: 0 auto; perspective: 1000px; }
+        .id-card {
+            background: linear-gradient(135deg, var(--card) 0%, var(--darker) 100%);
+            border-radius: 24px;
+            padding: 2.5rem;
+            border: 2px solid rgba(99, 102, 241, 0.3);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .id-card::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(99,102,241,0.1), transparent 30%);
+            animation: hologramSpin 8s linear infinite;
+        }
+        .id-card-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+        .id-card-photo {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            border: 3px solid rgba(99, 102, 241, 0.3);
+            flex-shrink: 0;
+        }
+        .id-card-info h3 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3rem;
+            margin-bottom: 0.3rem;
+        }
+        .id-card-info .id-type {
+            display: inline-block;
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .id-card-info .id-type.verified {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--neon-green);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+        .id-card-info p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .id-card-body {
+            position: relative;
+            z-index: 1;
+        }
+        .id-data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+        }
+        .id-data-row:last-child { border-bottom: none; }
+        .id-data-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .id-data-value {
+            font-weight: 600;
+            font-size: 0.9rem;
+            font-family: 'Orbitron', monospace;
+        }
+        .id-card-footer {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(99, 102, 241, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        .id-qr {
+            width: 80px; height: 80px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .id-qr::before {
+            content: '';
+            position: absolute;
+            inset: 4px;
+            background: 
+                linear-gradient(90deg, #333 0%, #333 20%, transparent 20%, transparent 40%, #333 40%, #333 60%, transparent 60%, transparent 80%, #333 80%, #333 100%),
+                linear-gradient(0deg, #333 0%, #333 20%, transparent 20%, transparent 40%, #333 40%, #333 60%, transparent 60%, transparent 80%, #333 80%, #333 100%);
+            background-size: 20px 20px;
+            opacity: 0.3;
+        }
+        .id-actions {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+        .trust-meter {
+            margin-top: 1.5rem;
+            background: var(--darker);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        .trust-meter h4 {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .trust-bar {
+            height: 12px;
+            background: var(--darker);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        .trust-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-green), var(--primary));
+            border-radius: 6px;
+            transition: width 1s ease;
+            position: relative;
+        }
+        .trust-fill::after {
+            content: '';
+            position: absolute;
+            right: 0; top: 0; bottom: 0;
+            width: 20px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+            animation: progressShine 1.5s infinite;
+        }
+        .trust-score-display {
+            text-align: center;
+            margin-top: 0.8rem;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--neon-green);
+        }
+        .id-badge-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .id-badge {
+            padding: 0.4rem;
+            border-radius: 8px;
+            background: var(--darker);
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        .id-badge.active {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--neon-green);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <canvas id="particle-canvas"></canvas>
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">SMID</a>
+        <div class="nav-links">
+            <a href="index.html" data-i18n="nav_home">Home</a>
+            <a href="prototype.html" data-i18n="nav_categories">Categories</a>
+            <a href="register.html" data-i18n="nav_register">Register</a>
+            <a href="dashboard.html" data-i18n="nav_dashboard">Dashboard</a>
+            <a href="idcard.html" class="active" data-i18n="nav_idcard">ID Card</a>
+            <a href="cloud.html" data-i18n="nav_cloud">Cloud</a>
+            <a href="founder.html" data-i18n="nav_founder">Founder</a>
+        </div>
+        <div class="nav-controls">
+            <div class="lang-switcher">
+                <button class="lang-btn" onclick="toggleLangDropdown()">
+                    <span>🌐</span><span id="currentLang">English</span><span>▼</span>
+                </button>
+                <div class="lang-dropdown" id="langDropdown">
+                    <div class="lang-option" data-lang="en" onclick="selectLang('en')">🇺🇸 English</div>
+                    <div class="lang-option" data-lang="fr" onclick="selectLang('fr')">🇫🇷 Français</div>
+                    <div class="lang-option" data-lang="es" onclick="selectLang('es')">🇪🇸 Español</div>
+                    <div class="lang-option" data-lang="pt" onclick="selectLang('pt')">🇧🇷 Português</div>
+                    <div class="lang-option" data-lang="yo" onclick="selectLang('yo')">🇳🇬 Yorùbá</div>
+                    <div class="lang-option" data-lang="ar" onclick="selectLang('ar')">🇸🇦 العربية</div>
+                    <div class="lang-option" data-lang="zh" onclick="selectLang('zh')">🇨🇳 中文</div>
+                </div>
+            </div>
+            <div class="theme-toggle">
+                <button class="theme-btn" onclick="setTheme('dark')">🌙</button>
+                <button class="theme-btn" onclick="setTheme('light')">☀️</button>
+                <button class="theme-btn" onclick="setTheme('neon')">⚡</button>
+            </div>
+            <div id="authNav"></div>
+            <div class="hamburger" onclick="toggleMobileMenu()"><span></span><span></span><span></span></div>
+        </div>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html" data-i18n="nav_home">Home</a>
+        <a href="prototype.html" data-i18n="nav_categories">Categories</a>
+        <a href="register.html" data-i18n="nav_register">Register</a>
+        <a href="dashboard.html" data-i18n="nav_dashboard">Dashboard</a>
+        <a href="idcard.html" data-i18n="nav_idcard">ID Card</a>
+        <a href="cloud.html" data-i18n="nav_cloud">Cloud</a>
+        <a href="founder.html" data-i18n="nav_founder">Founder</a>
+    </div>
+
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Your SMID ID Card</h2>
+            <p class="section-subtitle">Your verified digital identity, accessible anywhere</p>
+
+            <div class="id-card-container">
+                <div class="id-card" id="idCard">
+                    <div class="id-card-header">
+                        <div class="id-card-photo" id="idPhoto">👤</div>
+                        <div class="id-card-info">
+                            <h3 id="idName">SMID User</h3>
+                            <div class="id-type verified" id="idType">✓ Verified</div>
+                            <p id="idEmail">user@email.com</p>
+                        </div>
+                    </div>
+                    <div class="id-card-body">
+                        <div class="id-data-row">
+                            <span class="id-data-label">SMID ID</span>
+                            <span class="id-data-value" id="idNumber">SMID-XXXX-XXXX</span>
+                        </div>
+                        <div class="id-data-row">
+                            <span class="id-data-label">Category</span>
+                            <span class="id-data-value" id="idCategory">—</span>
+                        </div>
+                        <div class="id-data-row">
+                            <span class="id-data-label">Issue Date</span>
+                            <span class="id-data-value" id="idIssueDate">—</span>
+                        </div>
+                        <div class="id-data-row">
+                            <span class="id-data-label">Expiry</span>
+                            <span class="id-data-value" id="idExpiry">—</span>
+                        </div>
+                        <div class="id-data-row">
+                            <span class="id-data-label">Country</span>
+                            <span class="id-data-value" id="idCountry">—</span>
+                        </div>
+                        <div class="id-data-row">
+                            <span class="id-data-label">Access Code</span>
+                            <span class="id-data-value" id="idAccessCode">••••-••••-••••</span>
+                        </div>
+                    </div>
+                    <div class="trust-meter">
+                        <h4>📊 Trust Score</h4>
+                        <div class="trust-bar">
+                            <div class="trust-fill" id="trustFill" style="width: 0%"></div>
+                        </div>
+                        <div class="trust-score-display" id="trustScoreDisplay">0/100</div>
+                        <div class="id-badge-grid" id="idBadges">
+                            <div class="id-badge active">📘 FB</div>
+                            <div class="id-badge active">🐦 X</div>
+                            <div class="id-badge active">📸 IG</div>
+                            <div class="id-badge">💼 LI</div>
+                            <div class="id-badge">🎵 TT</div>
+                            <div class="id-badge">▶️ YT</div>
+                            <div class="id-badge">💬 DC</div>
+                            <div class="id-badge">👻 SC</div>
+                        </div>
+                    </div>
+                    <div class="id-card-footer">
+                        <div>
+                            <div style="font-family:'Orbitron',monospace;font-size:0.75rem;color:var(--primary-glow);">SMID PLATFORM</div>
+                            <div style="font-size:0.65rem;color:var(--text-muted);">Identity Today, Safety Tomorrow</div>
+                        </div>
+                        <div class="id-qr"></div>
+                    </div>
+                </div>
+
+                <div class="id-actions">
+                    <button class="btn btn-primary" onclick="downloadIDCard()">📥 Download Card</button>
+                    <button class="btn btn-outline" onclick="shareIDCard()">🔗 Share</button>
+                    <button class="btn btn-outline" onclick="copyID()">📋 Copy ID</button>
+                    <a href="register.html" class="btn btn-outline">📝 Update</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p style="font-family: 'Orbitron', monospace; font-size: 1.5rem; margin-bottom: 1rem; background: linear-gradient(135deg, var(--secondary), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">SMID</p>
+        <p>Identity Today, Safety Tomorrow.</p>
+        <p style="margin-top: 1rem; font-size: 0.85rem;">© 2026 SMID Platform. Founded by Oluwatosin Abraham Willoughby. All rights reserved.</p>
+    </footer>
+
+    <div class="cloud-status" onclick="showCloudInfo()">
+        <div class="cloud-dot"></div>
+        <span data-i18n="cloud_sync">Cloud Sync: Active</span>
+        <span id="savedCount" style="color: var(--text-muted); font-size: 0.75rem;">(0 saved)</span>
+    </div>
+
+    <script src="shared.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('smid_user') || 'null');
+            const regData = JSON.parse(localStorage.getItem('smid_regData') || '{}');
+
+            if (user) {
+                document.getElementById('idName').textContent = user.name || 'SMID User';
+                document.getElementById('idEmail').textContent = user.email || 'user@email.com';
+                document.getElementById('idNumber').textContent = user.id || 'SMID-XXXX-XXXX';
+            }
+
+            const catMap = { tsmid: 'TSMID', tasmid: 'TASMID', asmid: 'ASMID', bsmid: 'BSMID' };
+            document.getElementById('idCategory').textContent = catMap[regData.category] || 'Not Registered';
+
+            const now = new Date();
+            document.getElementById('idIssueDate').textContent = now.toLocaleDateString();
+            const expiry = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+            document.getElementById('idExpiry').textContent = expiry.toLocaleDateString();
+            document.getElementById('idCountry').textContent = regData.country || '—';
+            document.getElementById('idAccessCode').textContent = regData.accessCode || '••••-••••-••••';
+
+            // Animate trust score
+            setTimeout(() => {
+                document.getElementById('trustFill').style.width = '92%';
+                document.getElementById('trustScoreDisplay').textContent = '92/100';
+            }, 500);
+        });
+
+        function downloadIDCard() {
+            showNotification('Success', 'ID Card downloaded as PDF (simulated)', 'success');
+        }
+        function shareIDCard() {
+            const id = document.getElementById('idNumber').textContent;
+            navigator.clipboard.writeText(id).then(() => {
+                showNotification('Copied', 'ID link copied to clipboard', 'success');
+            });
+        }
+        function copyID() {
+            const id = document.getElementById('idNumber').textContent;
+            navigator.clipboard.writeText(id).then(() => {
+                showNotification('Copied', 'SMID ID copied to clipboard', 'success');
+            });
+        }
+    </script>
+</body>
+</html>

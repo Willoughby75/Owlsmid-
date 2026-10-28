@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMID — Login</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+        .auth-box { background: var(--card); border-radius: 24px; padding: 3rem; max-width: 450px; width: 100%; border: 1px solid rgba(99, 102, 241, 0.2); }
+        .auth-logo { font-family: 'Orbitron', monospace; font-size: 2rem; font-weight: 900; text-align: center; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--secondary), var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .auth-subtitle { text-align: center; color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem; }
+        .auth-tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 2px solid rgba(99, 102, 241, 0.1); }
+        .auth-tab { flex: 1; padding: 0.8rem; border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-weight: 600; font-family: inherit; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.3s; }
+        .auth-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .auth-panel { display: none; }
+        .auth-panel.active { display: block; animation: fadeIn 0.3s ease; }
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 500; font-size: 0.9rem; }
+        .form-group input { width: 100%; padding: 0.9rem; border-radius: 12px; border: 2px solid rgba(99, 102, 241, 0.2); background: var(--darker); color: var(--text); font-size: 1rem; transition: all 0.3s; font-family: inherit; }
+        .form-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+        .auth-btn { width: 100%; margin-top: 0.5rem; }
+        .auth-footer { text-align: center; margin-top: 1.5rem; color: var(--text-muted); font-size: 0.85rem; }
+        .auth-footer a { color: var(--primary); text-decoration: none; }
+        .pw-strength { height: 4px; border-radius: 2px; margin-top: 0.4rem; transition: all 0.3s; background: var(--darker); }
+        .pw-strength.weak { background: var(--danger); width: 33%; }
+        .pw-strength.medium { background: var(--warning); width: 66%; }
+        .pw-strength.strong { background: var(--neon-green); width: 100%; }
+        .pw-label { font-size: 0.75rem; margin-top: 0.2rem; color: var(--text-muted); }
+    </style>
+</head>
+<body data-theme="dark">
+    <canvas id="particle-canvas"></canvas>
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">SMID</a>
+        <div class="nav-links">
+            <a href="index.html" data-i18n="nav_home">Home</a>
+            <a href="prototype.html" data-i18n="nav_categories">Categories</a>
+            <a href="register.html" data-i18n="nav_register">Register</a>
+            <a href="dashboard.html" data-i18n="nav_dashboard">Dashboard</a>
+            <a href="idcard.html" data-i18n="nav_idcard">ID Card</a>
+            <a href="cloud.html" data-i18n="nav_cloud">Cloud</a>
+            <a href="founder.html" data-i18n="nav_founder">Founder</a>
+        </div>
+        <div class="nav-controls">
+            <div class="theme-toggle">
+                <button class="theme-btn" onclick="setTheme('dark')">🌙</button>
+                <button class="theme-btn" onclick="setTheme('light')">☀️</button>
+                <button class="theme-btn" onclick="setTheme('neon')">⚡</button>
+            </div>
+            <div class="hamburger" onclick="toggleMobileMenu()"><span></span><span></span><span></span></div>
+        </div>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html" data-i18n="nav_home">Home</a>
+        <a href="prototype.html" data-i18n="nav_categories">Categories</a>
+        <a href="register.html" data-i18n="nav_register">Register</a>
+        <a href="dashboard.html" data-i18n="nav_dashboard">Dashboard</a>
+        <a href="idcard.html" data-i18n="nav_idcard">ID Card</a>
+        <a href="cloud.html" data-i18n="nav_cloud">Cloud</a>
+        <a href="founder.html" data-i18n="nav_founder">Founder</a>
+    </div>
+
+    <section class="auth-page">
+        <div class="auth-box">
+            <div class="auth-logo">SMID</div>
+            <p class="auth-subtitle">Secure Identity Platform</p>
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchTab('login')" id="tab-login">Login</button>
+                <button class="auth-tab" onclick="switchTab('signup')" id="tab-signup">Sign Up</button>
+            </div>
+
+            <div class="auth-panel active" id="panel-login">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="loginEmail" placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••">
+                </div>
+                <button class="btn btn-primary auth-btn" onclick="handleLogin()">🔐 Login</button>
+                <div class="auth-footer">
+                    <a href="#" onclick="showNotification('Info','Password reset link would be sent to your email.','info')">Forgot password?</a>
+                </div>
+            </div>
+
+            <div class="auth-panel" id="panel-signup">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="signupName" placeholder="Your full name">
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="signupEmail" placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="signupPassword" placeholder="Min 8 characters" oninput="updatePasswordStrength(this.value)">
+                    <div class="pw-strength" id="pwStrength"></div>
+                    <div class="pw-label" id="pwLabel">Enter a password</div>
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="signupConfirm" placeholder="Repeat password">
+                </div>
+                <button class="btn btn-primary auth-btn" onclick="handleSignup()">🚀 Create Account</button>
+            </div>
+
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="register.html">Register for SMID</a></p>
+            </div>
+        </div>
+    </section>
+
+    <script src="shared.js"></script>
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            document.getElementById('panel-' + tab).classList.add('active');
+        }
+        function updatePasswordStrength(pw) {
+            const strength = document.getElementById('pwStrength');
+            const label = document.getElementById('pwLabel');
+            const score = checkPasswordStrength(pw);
+            strength.className = 'pw-strength';
+            if (pw.length === 0) { label.textContent = 'Enter a password'; return; }
+            if (score <= 2) { strength.classList.add('weak'); label.textContent = 'Weak password'; }
+            else if (score <= 4) { strength.classList.add('medium'); label.textContent = 'Medium strength'; }
+            else { strength.classList.add('strong'); label.textContent = 'Strong password'; }
+        }
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            if (!email || !password) { showNotification('Error', 'Please fill all fields', 'error'); return; }
+            if (!validateEmail(email)) { showNotification('Error', 'Invalid email address', 'error'); return; }
+            // Simulate login
+            const user = { name: 'Demo User', email: email, id: 'SMID-' + Math.random().toString(36).substr(2, 8).toUpperCase() };
+            localStorage.setItem('smid_user', JSON.stringify(user));
+            showNotification('Success', 'Login successful! Redirecting...', 'success');
+            setTimeout(() => window.location.href = 'dashboard.html', 1500);
+        }
+        function handleSignup() {
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirm = document.getElementById('signupConfirm').value;
+            if (!name || !email || !password || !confirm) { showNotification('Error', 'Please fill all fields', 'error'); return; }
+            if (!validateEmail(email)) { showNotification('Error', 'Invalid email address', 'error'); return; }
+            if (password !== confirm) { showNotification('Error', 'Passwords do not match', 'error'); return; }
+            if (password.length < 8) { showNotification('Error', 'Password must be at least 8 characters', 'error'); return; }
+            const user = { name: name, email: email, id: 'SMID-' + Math.random().toString(36).substr(2, 8).toUpperCase() };
+            localStorage.setItem('smid_user', JSON.stringify(user));
+            showNotification('Success', 'Account created! Redirecting...', 'success');
+            setTimeout(() => window.location.href = 'dashboard.html', 1500);
+        }
+    </script>
+</body>
+</html>

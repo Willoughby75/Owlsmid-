@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMID - Categories</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .cat-hero {
+            text-align: center;
+            padding: 2rem 0;
+        }
+        .cat-hero h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .cat-hero p {
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .cat-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 2rem auto;
+        }
+        .cat-detail-card {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 2rem;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .cat-detail-card:hover {
+            transform: translateY(-8px);
+        }
+        .cat-detail-card.tsmid { border-color: rgba(0, 255, 136, 0.3); }
+        .cat-detail-card.tsmid:hover { box-shadow: 0 10px 40px rgba(0, 255, 136, 0.15); }
+        .cat-detail-card.tasmid { border-color: rgba(245, 158, 11, 0.3); }
+        .cat-detail-card.tasmid:hover { box-shadow: 0 10px 40px rgba(245, 158, 11, 0.15); }
+        .cat-detail-card.asmid { border-color: rgba(0, 243, 255, 0.3); }
+        .cat-detail-card.asmid:hover { box-shadow: 0 10px 40px rgba(0, 243, 255, 0.15); }
+        .cat-detail-card.bsmid { border-color: rgba(176, 38, 255, 0.3); }
+        .cat-detail-card.bsmid:hover { box-shadow: 0 10px 40px rgba(176, 38, 255, 0.15); }
+        .cat-detail-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .cat-detail-icon {
+            width: 60px; height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+        .tsmid .cat-detail-icon { background: rgba(0, 255, 136, 0.1); }
+        .tasmid .cat-detail-icon { background: rgba(245, 158, 11, 0.1); }
+        .asmid .cat-detail-icon { background: rgba(0, 243, 255, 0.1); }
+        .bsmid .cat-detail-icon { background: rgba(176, 38, 255, 0.1); }
+        .cat-detail-title {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+        .cat-detail-badge {
+            display: inline-block;
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .cat-detail-card.tsmid .cat-detail-badge { background: rgba(0, 255, 136, 0.2); color: var(--neon-green); }
+        .cat-detail-card.tasmid .cat-detail-badge { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .cat-detail-card.asmid .cat-detail-badge { background: rgba(0, 243, 255, 0.2); color: var(--neon-blue); }
+        .cat-detail-card.bsmid .cat-detail-badge { background: rgba(176, 38, 255, 0.2); color: var(--neon-purple); }
+        .cat-detail-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        .cat-detail-features {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+        .cat-detail-features li {
+            padding: 0.4rem 0;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .cat-detail-features li::before {
+            content: '✓';
+            font-weight: 700;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+        .tsmid .cat-detail-features li::before { background: rgba(0, 255, 136, 0.2); color: var(--neon-green); }
+        .tasmid .cat-detail-features li::before { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .asmid .cat-detail-features li::before { background: rgba(0, 243, 255, 0.2); color: var(--neon-blue); }
+        .bsmid .cat-detail-features li::before { background: rgba(176, 38, 255, 0.2); color: var(--neon-purple); }
+        .cat-detail-price {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+        }
+        .tsmid .cat-detail-price { color: var(--neon-green); }
+        .tasmid .cat-detail-price { color: var(--warning); }
+        .asmid .cat-detail-price { color: var(--neon-blue); }
+        .bsmid .cat-detail-price { color: var(--neon-purple); }
+        .compare-table {
+            max-width: 900px;
+            margin: 3rem auto;
+            background: var(--card);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(99, 102, 241, 0.1);
+        }
+        .compare-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .compare-table th {
+            background: var(--darker);
+            padding: 1rem;
+            text-align: left;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.85rem;
+            color: var(--primary-glow);
+        }
+        .compare-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+            font-size: 0.9rem;
+        }
+        .compare-table tr:last-child td { border-bottom: none; }
+        .compare-check { color: var(--neon-green); font-weight: 700; }
+        .compare-cross { color: var(--danger); }
+        @media (max-width: 768px) {
+            .compare-table { overflow-x: auto; }
+            .compare-table table { min-width: 600px; }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <canvas id="particle-canvas"></canvas>
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">SMID</a>
+        <div class="nav-links">
+            <a href="index.html" data-i18n="nav_home">Home</a>
+            <a href="prototype.html" class="active" data-i18n="nav_categories">Categories</a>
+            <a href="register.html" data-i18n="nav_register">Register</a>
+            <a href="dashboard.html" data-i18n="nav_dashboard">Dashboard</a>
+            <a href="idcard.html" data-i18n="nav_idcard">ID Card</a>
+            <a href="cloud.html" data-i18n="nav_cloud">Cloud</a>
+            <a href="languages.html" data-i18n="nav_languages">Languages</a>
+            <a href="languages.html" data-i18n="nav_languages">Languages</a>
+        <a href="founder.html" data-i18n="nav_founder">Founder</a>
+        </div>
+        <div class="nav-controls">
+            <div class="lang-switcher">
+                <button class="lang-btn" onclick="toggleLangDropdown()">
+                    <span>🌐</span>
+                    <span id="currentLang">English</span>
+                    <span>▼</span>
+                </button>
+                <div class="lang-dropdown" id="langDropdown">
+                    <div class="lang-option" data-lang="en" onclick="selectLang('en')">🇺🇸 English</div>
+                    <div class="lang-option" data-lang="fr" onclick="selectLang('fr')">🇫🇷 Français</div>
+                    <div class="lang-option" data-lang="es" onclick="selectLang('es')">🇪🇸 Español</div>
+                    <div class="lang-option" data-lang="pt" onclick="selectLang('pt')">🇧🇷 Português</div>
+                    <div class="lang-option" data-lang="yo" onclick="selectLang('yo')">🇳🇬 Yorùbá</div>
+                    <div class="lang-option" data-lang="ar" onclick="selectLang('ar')">🇸🇦 العربية</div>
+                    <div class="lang-option" data-lang="zh" onclick="selectLang('zh')">🇨🇳 中文</div>
+                </div>
+            </div>
+            <div class="theme-toggle">
+                <button class="theme-btn" onclick="setTheme('dark')">🌙</button>
+                <button class="theme-btn" onclick="setTheme('light')">☀️</button>
+                <button class="theme-btn" onclick="setTheme('neon')">⚡</button>
+            </div>
+            <div id="authNav"></div>
+            <div class="hamburger" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html" data-i18n="nav_home">Home</a>
+        <a href="prototype.html" data-i18n="nav_categories">Categories</a>
+        <a href="register.html" data-i18n="nav_register">Register</a>
+        <a href="dashboard.html" data-i18n="nav_dashboard">Dashboard</a>
+        <a href="idcard.html" data-i18n="nav_idcard">ID Card</a>
+        <a href="cloud.html" data-i18n="nav_cloud">Cloud</a>
+        <a href="founder.html" data-i18n="nav_founder">Founder</a>
+    </div>
+
+    <section class="section">
+        <div class="container">
+            <div class="cat-hero">
+                <h2>Verification Categories</h2>
+                <p>SMID offers four tailored verification tiers designed to protect every type of digital identity — from teens to businesses.</p>
+            </div>
+
+            <div class="cat-detail-grid">
+                <div class="cat-detail-card tsmid">
+                    <div class="cat-detail-header">
+                        <div class="cat-detail-icon">🎮</div>
+                        <div class="cat-detail-title">TSMID</div>
+                    </div>
+                    <div class="cat-detail-badge">TEEN SOCIAL MEDIA ID</div>
+                    <div class="cat-detail-desc">Designed for teenagers aged 13-17. Requires parental consent and age-appropriate verification to ensure safe online interactions.</div>
+                    <ul class="cat-detail-features">
+                        <li>Parent/guardian consent required</li>
+                        <li>Age-appropriate content filters</li>
+                        <li>Safe community access</li>
+                        <li>Bullying protection features</li>
+                        <li>Educational resource links</li>
+                    </ul>
+                    <div class="cat-detail-price">FREE</div>
+                    <a href="register.html" class="btn btn-primary" style="width:100%;justify-content:center;">Get TSMID</a>
+                </div>
+
+                <div class="cat-detail-card tasmid">
+                    <div class="cat-detail-header">
+                        <div class="cat-detail-icon">🎓</div>
+                        <div class="cat-detail-title">TASMID</div>
+                    </div>
+                    <div class="cat-detail-badge">TEEN/ADULT STUDENT ID</div>
+                    <div class="cat-detail-desc">For students aged 18+ who need verified academic identity for networking, internships, and professional platforms.</div>
+                    <ul class="cat-detail-features">
+                        <li>School/university verification</li>
+                        <li>Student discount eligibility</li>
+                        <li>Professional networking</li>
+                        <li>Internship application boost</li>
+                        <li>Academic integrity badge</li>
+                    </ul>
+                    <div class="cat-detail-price">$4.99/mo</div>
+                    <a href="register.html" class="btn btn-primary" style="width:100%;justify-content:center;">Get TASMID</a>
+                </div>
+
+                <div class="cat-detail-card asmid">
+                    <div class="cat-detail-header">
+                        <div class="cat-detail-icon">👤</div>
+                        <div class="cat-detail-title">ASMID</div>
+                    </div>
+                    <div class="cat-detail-badge">ADULT SOCIAL MEDIA ID</div>
+                    <div class="cat-detail-desc">The standard verification for adults 18+. Prove your real identity across all social platforms and build trust with your audience.</div>
+                    <ul class="cat-detail-features">
+                        <li>Government ID verification</li>
+                        <li>Cross-platform trust badge</li>
+                        <li>Scam protection</li>
+                        <li>Priority support</li>
+                        <li>Content creator verification</li>
+                    </ul>
+                    <div class="cat-detail-price">$9.99/mo</div>
+                    <a href="register.html" class="btn btn-primary" style="width:100%;justify-content:center;">Get ASMID</a>
+                </div>
+
+                <div class="cat-detail-card bsmid">
+                    <div class="cat-detail-header">
+                        <div class="cat-detail-icon">🏢</div>
+                        <div class="cat-detail-title">BSMID</div>
+                    </div>
+                    <div class="cat-detail-badge">BUSINESS SOCIAL MEDIA ID</div>
+                    <div class="cat-detail-desc">For companies, brands, and organizations. Protect your business identity and build customer trust with verified business credentials.</div>
+                    <ul class="cat-detail-features">
+                        <li>Business registration verify</li>
+                        <li>Brand protection</li>
+                        <li>Customer trust boost</li>
+                        <li>Fraud prevention</li>
+                        <li>API access for platforms</li>
+                    </ul>
+                    <div class="cat-detail-price">$29.99/mo</div>
+                    <a href="register.html" class="btn btn-primary" style="width:100%;justify-content:center;">Get BSMID</a>
+                </div>
+            </div>
+
+            <div class="compare-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>TSMID</th>
+                            <th>TASMID</th>
+                            <th>ASMID</th>
+                            <th>BSMID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Digital ID Card</td>
+                            <td class="compare-check">✓</td>
+                            <td class="compare-check">✓</td>
+                            <td class="compare-check">✓</td>
+                            <td class="compare-check">✓</td>
+                        </tr>
+                        <tr>
+                            <td>Trust Score</td>
+                            <td class="compare-check">✓</td>
+                            <td class="compare-check">✓</td>
+                            <td class="compare-check">✓</td>
+                            <td class="compare-check">✓</td>
+                        </tr>
+                        <tr>
+                            <td>Cloud Storage</td>
+                            <td>500MB</td>
+                            <td>2GB</td>
+                            <td>5GB</td>
+                            <td>50GB</td>
+                        </tr>
+                        <tr>
+                            <td>Priority Support</td>
+                            <td class="compare-cross">✕</td>
+                            <td class="compare-check">✓</td>
+                            <td class="compare-check">✓</td>
+                            <td class="compare-check">✓</td>
+                        </tr>
+                        <tr>
+                            <td>API Access</td>
+                            <td class="compare-cross">✕</td>
+                            <td class="compare-cross">✕</td>
+                            <td class="compare-cross">✕</td>
+                            <td class="compare-check">✓</td>
+                        </tr>
+                        <tr>
+                            <td>Multi-platform Badge</td>
+                            <td class="compare-check">✓</td>
+                            <td class="compare-check">✓</td>
+                            <td class="compare-check">✓</td>
+                            <td class="compare-check">✓</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p style="font-family: 'Orbitron', monospace; font-size: 1.5rem; margin-bottom: 1rem; background: linear-gradient(135deg, var(--secondary), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">SMID</p>
+        <p>Identity Today, Safety Tomorrow.</p>
+        <p style="margin-top: 1rem; font-size: 0.85rem;">© 2026 SMID Platform. Founded by Oluwatosin Abraham Willoughby. All rights reserved.</p>
+    </footer>
+
+    <div class="cloud-status" onclick="showCloudInfo()">
+        <div class="cloud-dot"></div>
+        <span data-i18n="cloud_sync">Cloud Sync: Active</span>
+        <span id="savedCount" style="color: var(--text-muted); font-size: 0.75rem;">(0 saved)</span>
+    </div>
+
+    <script src="shared.js"></script>
+</body>
+</html>
